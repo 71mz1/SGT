@@ -1,0 +1,41 @@
+/*
+ * SGT System - Minimal Custom CSS
+ * Bootstrap 5 handles most styling. This file contains only small custom refinements.
+ */
+
+/* Body background color */
+body {
+  background-color: #f5f7fb;
+}
+
+/* Card hover effect */
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Navbar active link styling */
+.navbar-nav .nav-link.active {
+  color: #0d6efd !important;
+  font-weight: 600;
+}
+
+/* Smooth page transitions */
+main {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
