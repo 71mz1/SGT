@@ -17,23 +17,22 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
-            'role' => 'required|in:admin,member',
+            'password' => 'required|string|min:6'
+           
         ]);
 
         // Only allow admin registration if no admin exists
-        if ($data['role'] === 'admin') {
             $existingAdmin = User::where('role', 'admin')->exists();
             if ($existingAdmin) {
                 return response()->json(['message' => 'Admin already exists'], 422);
             }
-        }
+        
 
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'role' => $data['role'],
+            'role' => 'admin',
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
