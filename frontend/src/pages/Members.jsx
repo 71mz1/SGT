@@ -7,7 +7,7 @@ const Members = () => {
     name: '',
     email: '',
     password: '',
-    role: 'member'
+  
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -43,7 +43,7 @@ const Members = () => {
         name: '',
         email: '',
         password: '',
-        role: 'member'
+        
       });
       fetchMembers();
       setLoading(false);
@@ -135,20 +135,7 @@ const Members = () => {
                     />
                   </div>
 
-                  <div className="mb-3">
-                    <label htmlFor="role" className="form-label">Role</label>
-                    <select
-                      id="role"
-                      name="role"
-                      value={formData.role}
-                      onChange={handleChange}
-                      className="form-select"
-                    >
-                      <option value="member">Member</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
-
+                 
                   <button
                     type="submit"
                     className="btn btn-primary w-100"

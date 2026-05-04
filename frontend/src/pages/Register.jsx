@@ -6,8 +6,8 @@ const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: '',
-    role: 'member'
+    password: ''
+    
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -88,20 +88,7 @@ const Register = () => {
             />
           </div>
           
-          <div className="login-input-group">
-            <label htmlFor="role">Role</label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="login-input"
-              required
-            >
-              <option value="member">Member</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
+
           
           <button 
             type="submit" 
@@ -112,10 +99,10 @@ const Register = () => {
           </button>
         </form>
         
-        <div className="demo-accounts">
-          <h3>Demo Accounts:</h3>
-          <p><strong>Admin:</strong> admin@example.com / password123</p>
-          <p><strong>Member:</strong> member1@example.com / password123</p>
+
+        
+        <div className="login-footer">
+          <p>Already have an account? <a href="/login">Login here</a></p>
         </div>
       </div>
     </div>

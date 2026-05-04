@@ -127,6 +127,11 @@ const Login = () => {
           </div>
         </div>
       </div>
+        <div className="demo-accounts">
+          <h3>Demo Accounts:</h3>
+          <p><strong>Admin:</strong> admin@example.com / password123</p>
+          <p><strong>Member:</strong> member1@example.com / password123</p>
+        </div>
     </div>
   );
 };
