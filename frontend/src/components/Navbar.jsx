@@ -45,8 +45,8 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
-      <div className="container">
+<nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div className="container">
         <Link to="/dashboard" className="navbar-brand fw-bold text-primary">
           SGT System
         </Link>

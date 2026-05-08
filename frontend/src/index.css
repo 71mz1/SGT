@@ -17,6 +17,10 @@ body {
   line-height: 1.6;
 }
 
+body {
+  padding-top: 20px;
+}
+
 .App {
   min-height: 100vh;
   display: flex;
@@ -36,25 +40,47 @@ body {
   --light-color: #f8f9fa;
   --gray-color: #718096;
   --border-color: #e2e8f0;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-  --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   line-height: 1.2;
   margin-bottom: 1rem;
 }
 
-h1 { font-size: 2.5rem; }
-h2 { font-size: 2rem; }
-h3 { font-size: 1.5rem; }
-h4 { font-size: 1.25rem; }
-h5 { font-size: 1.125rem; }
-h6 { font-size: 1rem; }
+h1 {
+  font-size: 2.5rem;
+}
+
+h2 {
+  font-size: 2rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+h4 {
+  font-size: 1.25rem;
+}
+
+h5 {
+  font-size: 1.125rem;
+}
+
+h6 {
+  font-size: 1rem;
+}
 
 /* Login Page Styles */
 .login-container {
@@ -346,7 +372,9 @@ h6 { font-size: 1rem; }
   color: var(--dark-color);
 }
 
-.form-input, .form-textarea, .form-select {
+.form-input,
+.form-textarea,
+.form-select {
   width: 100%;
   padding: 0.75rem 1rem;
   border: 2px solid var(--border-color);
@@ -356,7 +384,9 @@ h6 { font-size: 1rem; }
   background: white;
 }
 
-.form-input:focus, .form-textarea:focus, .form-select:focus {
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
@@ -577,10 +607,21 @@ h6 { font-size: 1rem; }
   margin-bottom: 0.5rem;
 }
 
-.stat-value.blue { color: var(--primary-color); }
-.stat-value.green { color: var(--success-color); }
-.stat-value.indigo { color: var(--info-color); }
-.stat-value.warning { color: var(--warning-color); }
+.stat-value.blue {
+  color: var(--primary-color);
+}
+
+.stat-value.green {
+  color: var(--success-color);
+}
+
+.stat-value.indigo {
+  color: var(--info-color);
+}
+
+.stat-value.warning {
+  color: var(--warning-color);
+}
 
 .stat-label {
   color: var(--gray-color);
@@ -847,35 +888,35 @@ h6 { font-size: 1rem; }
   .page-content {
     grid-template-columns: 1fr;
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .members-grid,
   .groups-grid,
   .projects-grid,
   .tasks-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .navbar-menu {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .navbar-container {
     padding: 1rem;
   }
-  
+
   .page-container {
     padding: 1rem;
   }
-  
+
   .task-meta {
     grid-template-columns: 1fr;
   }

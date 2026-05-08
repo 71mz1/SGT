@@ -227,48 +227,6 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* Quick Actions */}
-            <div className="card border-0 shadow-sm rounded-3">
-              <div className="card-header bg-white border-bottom py-3">
-                <h5 className="card-title mb-0">Quick Actions</h5>
-              </div>
-              <div className="card-body">
-                <div className="row g-3">
-                  <div className="col-md-6 col-lg-3">
-                    <button
-                      className="btn btn-primary w-100"
-                      onClick={() => navigate('/members')}
-                    >
-                      Manage Members
-                    </button>
-                  </div>
-                  <div className="col-md-6 col-lg-3">
-                    <button
-                      className="btn btn-outline-secondary w-100"
-                      onClick={() => navigate('/groups')}
-                    >
-                      Manage Groups
-                    </button>
-                  </div>
-                  <div className="col-md-6 col-lg-3">
-                    <button
-                      className="btn btn-outline-secondary w-100"
-                      onClick={() => navigate('/projects')}
-                    >
-                      Manage Projects
-                    </button>
-                  </div>
-                  <div className="col-md-6 col-lg-3">
-                    <button
-                      className="btn btn-outline-secondary w-100"
-                      onClick={() => navigate('/tasks')}
-                    >
-                      Manage Tasks
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
           </>
         ) : (
           /* MEMBER DASHBOARD */
