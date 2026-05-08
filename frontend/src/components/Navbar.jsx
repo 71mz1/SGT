@@ -43,7 +43,7 @@ const Navbar = () => {
     return null;
   }
 
-  if (!token) {
+  if (!token || !user) {
     return null;
   }
 
@@ -163,11 +163,11 @@ const Navbar = () => {
             <div className="d-flex align-items-center gap-2">
               <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
                    style={{ width: '35px', height: '35px', fontSize: '14px', fontWeight: '600' }}>
-                {user.name.charAt(0).toUpperCase()}
+                {user?.name?.charAt(0)?.toUpperCase() || '?'}
               </div>
               <div className="d-none d-lg-block">
-                <div className="small fw-medium">{user.name}</div>
-                <div className="small text-muted text-capitalize">{user.role}</div>
+                <div className="small fw-medium">{user?.name || 'User'}</div>
+                <div className="small text-muted text-capitalize">{user?.role || 'member'}</div>
               </div>
             </div>
 
