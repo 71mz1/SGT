@@ -18,7 +18,7 @@ body {
 }
 
 body {
-  padding-top: 20px;
+  padding-top: 10px;
 }
 
 .App {
@@ -82,102 +82,7 @@ h6 {
   font-size: 1rem;
 }
 
-/* Login Page Styles */
-.login-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-  padding: 2rem;
-}
-
-.login-form {
-  max-width: 420px;
-  width: 100%;
-  background: white;
-  padding: 2.5rem;
-  border-radius: 16px;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--border-color);
-}
-
-.login-title {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  color: var(--dark-color);
-  text-align: center;
-}
-
-.login-subtitle {
-  text-align: center;
-  color: var(--gray-color);
-  margin-bottom: 2rem;
-}
-
-.login-input-group {
-  margin-bottom: 1.5rem;
-}
-
-.login-input-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: var(--dark-color);
-}
-
-.login-input {
-  width: 100%;
-  padding: 0.875rem 1rem;
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: var(--transition);
-  background: white;
-}
-
-.login-input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
-}
-
-.login-button {
-  width: 100%;
-  padding: 1rem;
-  background: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  margin-top: 1rem;
-}
-
-.login-button:hover {
-  background: var(--primary-dark);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.login-button:disabled {
-  background: var(--gray-color);
-  cursor: not-allowed;
-  transform: none;
-}
-
-.error-message {
-  background: #fee;
-  color: var(--danger-color);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  border: 1px solid #fcc;
-  font-size: 0.875rem;
-}
+/* Login/Register Pages - Now using Bootstrap classes (min-vh-100, card, form-control, btn, etc.) */
 
 .demo-accounts {
   margin-top: 2rem;
