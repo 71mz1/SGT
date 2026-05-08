@@ -11,6 +11,7 @@ const Projects = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     fetchProjects();
@@ -46,25 +47,30 @@ const Projects = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       await api.post('/projects', formData);
+      setSuccess('Project created successfully!');
       setFormData({ name: '', description: '', group_id: '' });
       fetchProjects();
-      setLoading(false);
+      setTimeout(() => setSuccess(''), 4000);
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to create project');
+    } finally {
       setLoading(false);
     }
   };
 
-  const deleteProject = async (id) => {
-    if (window.confirm('Are you sure you want to delete this project?')) {
+  const deleteProject = async (id, name) => {
+    if (window.confirm(`Are you sure you want to delete the project "${name}"? This action cannot be undone.`)) {
       try {
         await api.delete(`/projects/${id}`);
+        setSuccess('Project deleted successfully!');
         setProjects(projects.filter(project => project.id !== id));
+        setTimeout(() => setSuccess(''), 4000);
       } catch (error) {
-        // Silent error handling
+        setError('Failed to delete project');
       }
     }
   };
@@ -77,13 +83,21 @@ const Projects = () => {
         {error && (
           <div className="alert alert-danger alert-dismissible fade show mb-4" role="alert">
             {error}
-            <button type="button" className="btn-close" onClick={() => setError('')}></button>
+            <button type="button" className="btn-close" onClick={() => setError('')} aria-label="Close alert"></button>
+          </div>
+        )}
+
+        {/* Success Alert */}
+        {success && (
+          <div className="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            {success}
+            <button type="button" className="btn-close" onClick={() => setSuccess('')} aria-label="Close alert"></button>
           </div>
         )}
 
         <div className="row g-4">
           {/* Create Project Form */}
-          <div className="col-lg-4">
+          <div className="col-12 col-lg-4">
             <div className="card border-0 shadow-sm rounded-3">
               <div className="card-header bg-white border-bottom py-3">
                 <h5 className="card-title mb-0">Create Project</h5>
@@ -99,7 +113,9 @@ const Projects = () => {
                       value={formData.name}
                       onChange={handleChange}
                       className="form-control"
+                      placeholder="Enter project name"
                       required
+                      aria-label="Project name"
                     />
                   </div>
 
@@ -112,6 +128,8 @@ const Projects = () => {
                       onChange={handleChange}
                       className="form-control"
                       rows="3"
+                      placeholder="Describe the project"
+                      aria-label="Project description"
                     />
                   </div>
 
@@ -124,6 +142,7 @@ const Projects = () => {
                       onChange={handleChange}
                       className="form-select"
                       required
+                      aria-label="Select group for project"
                     >
                       <option value="">Choose a group...</option>
                       {groups.map((group) => (
@@ -138,6 +157,7 @@ const Projects = () => {
                     type="submit"
                     className="btn btn-primary w-100"
                     disabled={loading}
+                    aria-busy={loading}
                   >
                     {loading ? 'Creating...' : 'Create Project'}
                   </button>
@@ -147,7 +167,7 @@ const Projects = () => {
           </div>
 
           {/* Projects List */}
-          <div className="col-lg-8">
+          <div className="col-12 col-lg-8">
             {projects.length === 0 ? (
               <div className="card border-0 shadow-sm rounded-3">
                 <div className="card-body text-center py-5">
@@ -157,13 +177,14 @@ const Projects = () => {
             ) : (
               <div className="row g-3">
                 {projects.map((project) => (
-                  <div key={project.id} className="col-md-6">
+                  <div key={project.id} className="col-12 col-md-6">
                     <div className="card border-0 shadow-sm rounded-3 h-100">
                       <div className="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                         <h5 className="card-title mb-0">{project.name}</h5>
                         <button
-                          onClick={() => deleteProject(project.id)}
+                          onClick={() => deleteProject(project.id, project.name)}
                           className="btn btn-outline-danger btn-sm"
+                          aria-label={`Delete project ${project.name}`}
                         >
                           Delete
                         </button>

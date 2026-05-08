@@ -4,7 +4,6 @@ import api from '../api/axios';
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
-  const [isNavCollapsed, setIsNavCollapsed] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -53,7 +52,7 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-<nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+<nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top" aria-label="Main navigation">
         <div className="container">
         <Link to="/dashboard" className="navbar-brand fw-bold text-primary">
           SGT System
@@ -62,19 +61,24 @@ const Navbar = () => {
         <button
           className="navbar-toggler border-0"
           type="button"
-          onClick={() => setIsNavCollapsed(!isNavCollapsed)}
+          data-bs-toggle="collapse"
+          data-bs-target="#mainNavbar"
+          aria-controls="mainNavbar"
+          aria-expanded="false"
           aria-label="Toggle navigation"
         >
           <span className="navbar-toggler-icon"></span>
         </button>
 
-        <div className={`collapse navbar-collapse ${!isNavCollapsed ? 'show' : ''}`}>
+        <div className="collapse navbar-collapse" id="mainNavbar">
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
             <li className="nav-item">
               <Link
                 to="/dashboard"
                 className={`nav-link ${isActive('/dashboard') ? 'active fw-semibold' : ''}`}
-                onClick={() => setIsNavCollapsed(true)}
+                data-bs-toggle="collapse"
+                data-bs-target="#mainNavbar"
+                aria-label="Go to dashboard"
               >
                 Dashboard
               </Link>
@@ -86,7 +90,9 @@ const Navbar = () => {
                   <Link
                     to="/members"
                     className={`nav-link ${isActive('/members') ? 'active fw-semibold' : ''}`}
-                    onClick={() => setIsNavCollapsed(true)}
+                    data-bs-toggle="collapse"
+                    data-bs-target="#mainNavbar"
+                    aria-label="Go to members page"
                   >
                     Members
                   </Link>
@@ -95,7 +101,9 @@ const Navbar = () => {
                   <Link
                     to="/groups"
                     className={`nav-link ${isActive('/groups') ? 'active fw-semibold' : ''}`}
-                    onClick={() => setIsNavCollapsed(true)}
+                    data-bs-toggle="collapse"
+                    data-bs-target="#mainNavbar"
+                    aria-label="Go to groups page"
                   >
                     Groups
                   </Link>
@@ -104,7 +112,9 @@ const Navbar = () => {
                   <Link
                     to="/projects"
                     className={`nav-link ${isActive('/projects') ? 'active fw-semibold' : ''}`}
-                    onClick={() => setIsNavCollapsed(true)}
+                    data-bs-toggle="collapse"
+                    data-bs-target="#mainNavbar"
+                    aria-label="Go to projects page"
                   >
                     Projects
                   </Link>
@@ -113,68 +123,60 @@ const Navbar = () => {
                   <Link
                     to="/tasks"
                     className={`nav-link ${isActive('/tasks') ? 'active fw-semibold' : ''}`}
-                    onClick={() => setIsNavCollapsed(true)}
+                    data-bs-toggle="collapse"
+                    data-bs-target="#mainNavbar"
+                    aria-label="Go to tasks page"
                   >
                     Tasks
                   </Link>
                 </li>
               </>
             ) : (
-              <li className="nav-item">
-                <Link
-                  to="/tasks"
-                  className={`nav-link ${isActive('/tasks') ? 'active fw-semibold' : ''}`}
-                  onClick={() => setIsNavCollapsed(true)}
-                >
-                  My Tasks
-                </Link>
-              </li>
+              <>
+                <li className="nav-item">
+                  <Link
+                    to="/tasks"
+                    className={`nav-link ${isActive('/tasks') ? 'active fw-semibold' : ''}`}
+                    data-bs-toggle="collapse"
+                    data-bs-target="#mainNavbar"
+                    aria-label="Go to my tasks page"
+                  >
+                    My Tasks
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link
+                    to="/groups"
+                    className={`nav-link ${isActive('/groups') ? 'active fw-semibold' : ''}`}
+                    data-bs-toggle="collapse"
+                    data-bs-target="#mainNavbar"
+                    aria-label="Go to my groups page"
+                  >
+                    My Groups
+                  </Link>
+                </li>
+              </>
             )}
           </ul>
 
           <div className="d-flex align-items-center gap-3">
-            <Link 
-              to="/settings"
-              className="text-decoration-none text-dark"
-            >
-              <div className="d-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
-                <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
-                     style={{ width: '35px', height: '35px', fontSize: '14px', fontWeight: '600' }}>
-                  {(user?.name?.charAt(0) || 'U').toUpperCase()}
-                </div>
-
+            <div className="d-flex align-items-center gap-2">
+              <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                   style={{ width: '35px', height: '35px', fontSize: '14px', fontWeight: '600' }}>
+                {user.name.charAt(0).toUpperCase()}
               </div>
-            </Link>
-
-            <div className="dropdown">
-              <button 
-                className="btn btn-sm btn-outline-danger"
-                type="button"
-                id="logoutDropdown"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                  <path fillRule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
-                  <path fillRule="evenodd" d="M15.854 5.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708l2.147-2.146H5.5a.5.5 0 0 1 0-1h9.793l-2.147-2.146a.5.5 0 0 1 .708-.708l3 3z"/>
-                </svg>
-              </button>
-              <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="logoutDropdown">
-                <li>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleLogout();
-                    }}
-                    className="dropdown-item text-danger"
-                  >
-                    Logout
-                  </button>
-                </li>
-              </ul>
+              <div className="d-none d-lg-block">
+                <div className="small fw-medium">{user.name}</div>
+                <div className="small text-muted text-capitalize">{user.role}</div>
+              </div>
             </div>
+
+            <button
+              onClick={handleLogout}
+              className="btn btn-outline-danger btn-sm"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </div>

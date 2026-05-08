@@ -63,13 +63,32 @@ const Dashboard = () => {
   }
 
   return (
- 
-    <div>
+    <div className="min-vh-100 bg-light">
+      {/* Page Header */}
+      <div className="bg-white border-bottom py-4">
+        <div className="container">
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <h1 className="h3 mb-1">Dashboard</h1>
+              <p className="text-muted mb-0">Overview of your task management activity</p>
+            </div>
+            <span className={`badge ${user?.role === 'admin' ? 'bg-primary' : 'bg-secondary'} fs-6`}>
+              {user?.role === 'admin' ? 'Admin' : 'Member'}
+            </span>
+          </div>
+        </div>
+      </div>
+
       <main className="container py-4">
         {error && (
           <div className="alert alert-danger alert-dismissible fade show" role="alert">
             {error}
-            <button type="button" className="btn-close" onClick={() => setError('')}></button>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={() => setError('')}
+              aria-label="Close alert"
+            ></button>
           </div>
         )}
 
@@ -87,23 +106,11 @@ const Dashboard = () => {
             {/* Stats Cards */}
             <div className="row g-4 mb-4">
               <div className="col-md-6 col-lg-3">
-                <div 
-                  className="card border-0 shadow-sm rounded-3 h-100" 
-                  style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
-                  onClick={() => navigate('/members')}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-5px)';
-                    e.currentTarget.style.boxShadow = '0 0.5rem 1.5rem rgba(0, 0, 0, 0.15)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)';
-                  }}
-                >
+                <div className="card border-0 shadow-sm rounded-3 h-100">
                   <div className="card-body d-flex align-items-center">
                     <div className="flex-shrink-0">
                       <div className="bg-primary bg-opacity-10 text-primary rounded-3 p-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
                           <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM6.936 9.28a5.76 5.76 0 0 0-1.22-.703 6.514 6.514 0 0 0-2.2-.42c-.38-.028-.76-.028-1.14 0-.76.057-1.516.19-2.2.42a5.76 5.76 0 0 0-1.22.703A4.002 4.002 0 0 0 0 12.004V14a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1v-.996A4.002 4.002 0 0 0 2.936 9.28z"/>
                         </svg>
                       </div>
@@ -117,23 +124,11 @@ const Dashboard = () => {
               </div>
 
               <div className="col-md-6 col-lg-3">
-                <div 
-                  className="card border-0 shadow-sm rounded-3 h-100" 
-                  style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
-                  onClick={() => navigate('/groups')}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-5px)';
-                    e.currentTarget.style.boxShadow = '0 0.5rem 1.5rem rgba(0, 0, 0, 0.15)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)';
-                  }}
-                >
+                <div className="card border-0 shadow-sm rounded-3 h-100">
                   <div className="card-body d-flex align-items-center">
                     <div className="flex-shrink-0">
                       <div className="bg-success bg-opacity-10 text-success rounded-3 p-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
                           <path d="M6 1v3H1V1h5zM1 0a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1V1a1 1 0 0 0-1-1H1zm14 12v3h-5v-3h5zm-5-1a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1h-5zM6 8v7H1V8h5zM1 7a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1H1zm14-6v7h-5V1h5zm-5-1a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1V1a1 1 0 0 0-1-1h-5z"/>
                         </svg>
                       </div>
@@ -147,23 +142,11 @@ const Dashboard = () => {
               </div>
 
               <div className="col-md-6 col-lg-3">
-                <div 
-                  className="card border-0 shadow-sm rounded-3 h-100" 
-                  style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
-                  onClick={() => navigate('/projects')}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-5px)';
-                    e.currentTarget.style.boxShadow = '0 0.5rem 1.5rem rgba(0, 0, 0, 0.15)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)';
-                  }}
-                >
+                <div className="card border-0 shadow-sm rounded-3 h-100">
                   <div className="card-body d-flex align-items-center">
                     <div className="flex-shrink-0">
                       <div className="bg-info bg-opacity-10 text-info rounded-3 p-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
                           <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
                           <path d="M5 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 5 8zm0-2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0 5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-1-5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1zm0 2.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1zm0 2.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
                         </svg>
@@ -178,23 +161,11 @@ const Dashboard = () => {
               </div>
 
               <div className="col-md-6 col-lg-3">
-                <div 
-                  className="card border-0 shadow-sm rounded-3 h-100" 
-                  style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
-                  onClick={() => navigate('/tasks')}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-5px)';
-                    e.currentTarget.style.boxShadow = '0 0.5rem 1.5rem rgba(0, 0, 0, 0.15)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)';
-                  }}
-                >
+                <div className="card border-0 shadow-sm rounded-3 h-100">
                   <div className="card-body d-flex align-items-center">
                     <div className="flex-shrink-0">
                       <div className="bg-warning bg-opacity-10 text-warning rounded-3 p-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
                           <path d="M3 14.5A1.5 1.5 0 0 1 1.5 13V3A1.5 1.5 0 0 1 3 1.5h8a.5.5 0 0 1 0 1H3a.5.5 0 0 0-.5.5v10a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V8a.5.5 0 0 1 1 0v5a1.5 1.5 0 0 1-1.5 1.5H3z"/>
                           <path d="m8.354 10.354 7-7a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z"/>
                         </svg>
@@ -217,21 +188,28 @@ const Dashboard = () => {
                 </div>
                 <div className="card-body">
                   <div className="row g-3">
-                    {Object.entries(stats.tasks_by_status).map(([status, count]) => (
-                      <div key={status} className="col-md-6 col-lg-3">
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                          <span className="small fw-medium">{getStatusLabel(status)}</span>
-                          <span className={`badge ${getStatusBadgeClass(status)}`}>{count}</span>
+                    {Object.entries(stats.tasks_by_status).map(([status, count]) => {
+                      const percentage = Math.round((count / (stats?.total_tasks || 1)) * 100);
+                      return (
+                        <div key={status} className="col-12 col-sm-6 col-lg-3">
+                          <div className="d-flex justify-content-between align-items-center mb-2">
+                            <span className="small fw-medium">{getStatusLabel(status)}</span>
+                            <span className={`badge ${getStatusBadgeClass(status)}`} aria-label={`${getStatusLabel(status)} tasks: ${count}`}>{count}</span>
+                          </div>
+                          <div className="progress" style={{ height: '8px' }}>
+                            <div
+                              className={`progress-bar ${getStatusBadgeClass(status).replace('bg-', 'bg-').replace('text-dark', '')}`}
+                              role="progressbar"
+                              style={{ width: `${percentage}%` }}
+                              aria-valuenow={percentage}
+                              aria-valuemin="0"
+                              aria-valuemax="100"
+                              aria-label={`${getStatusLabel(status)} tasks progress: ${percentage}%`}
+                            ></div>
+                          </div>
                         </div>
-                        <div className="progress" style={{ height: '8px' }}>
-                          <div
-                            className={`progress-bar ${getStatusBadgeClass(status).replace('bg-', 'bg-').replace('text-dark', '')}`}
-                            role="progressbar"
-                            style={{ width: `${(count / (stats?.total_tasks || 1)) * 100}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -251,7 +229,7 @@ const Dashboard = () => {
                           <h6 className="mb-1">{task.title}</h6>
                           <small className="text-muted">Project: {task.project?.name || 'N/A'}</small>
                         </div>
-                        <span className={`badge ${getStatusBadgeClass(task.status)}`}>
+                        <span className={`badge ${getStatusBadgeClass(task.status)}`} aria-label={`Task status: ${getStatusLabel(task.status)}`}>
                           {getStatusLabel(task.status)}
                         </span>
                       </div>
@@ -275,7 +253,7 @@ const Dashboard = () => {
 
             {/* Stats Cards */}
             <div className="row g-4 mb-4">
-              <div className="col-md-6 col-lg-3">
+              <div className="col-12 col-sm-6 col-lg-3">
                 <div className="card border-0 shadow-sm rounded-3 h-100">
                   <div className="card-body text-center">
                     <h3 className="h2 text-primary mb-1">{stats?.total_tasks || 0}</h3>
@@ -284,7 +262,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="col-md-6 col-lg-3">
+              <div className="col-12 col-sm-6 col-lg-3">
                 <div className="card border-0 shadow-sm rounded-3 h-100">
                   <div className="card-body text-center">
                     <h3 className="h2 text-warning mb-1">{stats?.tasks_by_status?.en_attente || 0}</h3>
@@ -293,7 +271,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="col-md-6 col-lg-3">
+              <div className="col-12 col-sm-6 col-lg-3">
                 <div className="card border-0 shadow-sm rounded-3 h-100">
                   <div className="card-body text-center">
                     <h3 className="h2 text-info mb-1">{stats?.tasks_by_status?.en_cours || 0}</h3>
@@ -302,7 +280,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="col-md-6 col-lg-3">
+              <div className="col-12 col-sm-6 col-lg-3">
                 <div className="card border-0 shadow-sm rounded-3 h-100">
                   <div className="card-body text-center">
                     <h3 className="h2 text-success mb-1">{stats?.tasks_by_status?.terminee || 0}</h3>
@@ -319,28 +297,28 @@ const Dashboard = () => {
               </div>
               <div className="card-body">
                 <div className="row g-3">
-                  <div className="col-md-6 col-xl-3">
+                  <div className="col-12 col-sm-6 col-xl-3">
                     <div className="border rounded-3 p-3 text-center">
                       <h6 className="text-warning mb-2">En Attente</h6>
                       <h4 className="mb-1">{stats?.tasks_by_status?.en_attente || 0}</h4>
                       <small className="text-muted">Waiting to start</small>
                     </div>
                   </div>
-                  <div className="col-md-6 col-xl-3">
+                  <div className="col-12 col-sm-6 col-xl-3">
                     <div className="border rounded-3 p-3 text-center">
                       <h6 className="text-info mb-2">En Cours</h6>
                       <h4 className="mb-1">{stats?.tasks_by_status?.en_cours || 0}</h4>
                       <small className="text-muted">Currently working</small>
                     </div>
                   </div>
-                  <div className="col-md-6 col-xl-3">
+                  <div className="col-12 col-sm-6 col-xl-3">
                     <div className="border rounded-3 p-3 text-center">
                       <h6 className="text-primary mb-2">Validation</h6>
                       <h4 className="mb-1">{stats?.tasks_by_status?.validation || 0}</h4>
                       <small className="text-muted">Under review</small>
                     </div>
                   </div>
-                  <div className="col-md-6 col-xl-3">
+                  <div className="col-12 col-sm-6 col-xl-3">
                     <div className="border rounded-3 p-3 text-center">
                       <h6 className="text-success mb-2">Terminée</h6>
                       <h4 className="mb-1">{stats?.tasks_by_status?.terminee || 0}</h4>
@@ -367,7 +345,7 @@ const Dashboard = () => {
                             {task.project?.name || 'N/A'} • {task.priority || 'Normal'}
                           </small>
                         </div>
-                        <span className={`badge ${getStatusBadgeClass(task.status)}`}>
+                        <span className={`badge ${getStatusBadgeClass(task.status)}`} aria-label={`Task status: ${getStatusLabel(task.status)}`}>
                           {getStatusLabel(task.status)}
                         </span>
                       </div>
@@ -377,22 +355,6 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* My Groups */}
-            {stats?.total_groups > 0 && (
-              <div className="card border-0 shadow-sm rounded-3">
-                <div className="card-header bg-white border-bottom py-3">
-                  <h5 className="card-title mb-0">My Groups</h5>
-                </div>
-                <div className="card-body">
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => navigate('/groups')}
-                  >
-                    View All Groups ({stats.total_groups})
-                  </button>
-                </div>
-              </div>
-            )}
           </>
         )}
       </main>

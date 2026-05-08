@@ -6,11 +6,11 @@ const Members = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: '',
-  
+    password: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     fetchMembers();
@@ -36,30 +36,34 @@ const Members = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       await api.post('/members', formData);
+      setSuccess('Member created successfully!');
       setFormData({
         name: '',
         email: '',
-        password: '',
-        
+        password: ''
       });
       fetchMembers();
-      setLoading(false);
+      setTimeout(() => setSuccess(''), 4000);
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to create member');
+    } finally {
       setLoading(false);
     }
   };
 
-  const deleteMember = async (id) => {
-    if (window.confirm('Are you sure you want to delete this member?')) {
+  const deleteMember = async (id, name) => {
+    if (window.confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
       try {
         await api.delete(`/members/${id}`);
+        setSuccess('Member deleted successfully!');
         setMembers(members.filter(member => member.id !== id));
+        setTimeout(() => setSuccess(''), 4000);
       } catch (error) {
-        // Silent error handling
+        setError('Failed to delete member');
       }
     }
   };
@@ -73,21 +77,28 @@ const Members = () => {
       <div>
 
       <main className="container py-4">
+        {error && (
+          <div className="alert alert-danger alert-dismissible fade show" role="alert">
+            {error}
+            <button type="button" className="btn-close" onClick={() => setError('')} aria-label="Close alert"></button>
+          </div>
+        )}
+
+        {success && (
+          <div className="alert alert-success alert-dismissible fade show" role="alert">
+            {success}
+            <button type="button" className="btn-close" onClick={() => setSuccess('')} aria-label="Close alert"></button>
+          </div>
+        )}
+
         <div className="row g-4">
           {/* Create Member Form */}
-          <div className="col-lg-4">
+          <div className="col-12 col-lg-4">
             <div className="card border-0 shadow-sm rounded-3">
               <div className="card-header bg-white border-bottom py-3">
                 <h5 className="card-title mb-0">Create Member Account</h5>
               </div>
               <div className="card-body">
-                {error && (
-                  <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                    {error}
-                    <button type="button" className="btn-close" onClick={() => setError('')}></button>
-                  </div>
-                )}
-
                 <form onSubmit={handleSubmit}>
                   <div className="mb-3">
                     <label htmlFor="name" className="form-label">Name</label>
@@ -98,7 +109,9 @@ const Members = () => {
                       value={formData.name}
                       onChange={handleChange}
                       className="form-control"
+                      placeholder="Full name"
                       required
+                      aria-label="Member full name"
                     />
                   </div>
 
@@ -111,7 +124,9 @@ const Members = () => {
                       value={formData.email}
                       onChange={handleChange}
                       className="form-control"
+                      placeholder="Email address"
                       required
+                      aria-label="Member email address"
                     />
                   </div>
 
@@ -124,16 +139,18 @@ const Members = () => {
                       value={formData.password}
                       onChange={handleChange}
                       className="form-control"
+                      placeholder="Minimum 6 characters"
                       required
                       minLength="6"
+                      aria-label="Member password"
                     />
                   </div>
 
-                 
                   <button
                     type="submit"
                     className="btn btn-primary w-100"
                     disabled={loading}
+                    aria-busy={loading}
                   >
                     {loading ? (
                       <>
@@ -150,7 +167,7 @@ const Members = () => {
           </div>
 
           {/* Members List */}
-          <div className="col-lg-8">
+          <div className="col-12 col-lg-8">
             <div className="card border-0 shadow-sm rounded-3">
               <div className="card-header bg-white border-bottom py-3">
                 <h5 className="card-title mb-0">Members List</h5>
@@ -177,14 +194,15 @@ const Members = () => {
                             <td className="fw-medium">{member.name}</td>
                             <td>{member.email}</td>
                             <td>
-                              <span className={`badge ${getRoleBadgeClass(member.role)}`}>
+                              <span className={`badge ${getRoleBadgeClass(member.role)}`} title={`User role: ${member.role}`}>
                                 {member.role}
                               </span>
                             </td>
                             <td className="text-end">
                               <button
-                                onClick={() => deleteMember(member.id)}
+                                onClick={() => deleteMember(member.id, member.name)}
                                 className="btn btn-outline-danger btn-sm"
+                                aria-label={`Delete member ${member.name}`}
                               >
                                 Delete
                               </button>
