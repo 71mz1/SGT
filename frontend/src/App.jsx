@@ -7,6 +7,7 @@ import Members from './pages/Members';
 import Groups from './pages/Groups';
 import Projects from './pages/Projects';
 import Tasks from './pages/Tasks';
+import Settings from './pages/Settings';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -55,6 +56,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Tasks />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/settings" 
+            element={
+              <ProtectedRoute>
+                <Settings />
               </ProtectedRoute>
             } 
           />

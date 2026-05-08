@@ -63,22 +63,8 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-vh-100 bg-light">
-      {/* Page Header */}
-      <div className="bg-white border-bottom py-4">
-        <div className="container">
-          <div className="d-flex justify-content-between align-items-center">
-            <div>
-              <h1 className="h3 mb-1">Dashboard</h1>
-              <p className="text-muted mb-0">Overview of your task management activity</p>
-            </div>
-            <span className={`badge ${user?.role === 'admin' ? 'bg-primary' : 'bg-secondary'} fs-6`}>
-              {user?.role === 'admin' ? 'Admin' : 'Member'}
-            </span>
-          </div>
-        </div>
-      </div>
-
+ 
+    <div>
       <main className="container py-4">
         {error && (
           <div className="alert alert-danger alert-dismissible fade show" role="alert">
@@ -101,7 +87,19 @@ const Dashboard = () => {
             {/* Stats Cards */}
             <div className="row g-4 mb-4">
               <div className="col-md-6 col-lg-3">
-                <div className="card border-0 shadow-sm rounded-3 h-100">
+                <div 
+                  className="card border-0 shadow-sm rounded-3 h-100" 
+                  style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+                  onClick={() => navigate('/members')}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-5px)';
+                    e.currentTarget.style.boxShadow = '0 0.5rem 1.5rem rgba(0, 0, 0, 0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)';
+                  }}
+                >
                   <div className="card-body d-flex align-items-center">
                     <div className="flex-shrink-0">
                       <div className="bg-primary bg-opacity-10 text-primary rounded-3 p-3">
@@ -119,7 +117,19 @@ const Dashboard = () => {
               </div>
 
               <div className="col-md-6 col-lg-3">
-                <div className="card border-0 shadow-sm rounded-3 h-100">
+                <div 
+                  className="card border-0 shadow-sm rounded-3 h-100" 
+                  style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+                  onClick={() => navigate('/groups')}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-5px)';
+                    e.currentTarget.style.boxShadow = '0 0.5rem 1.5rem rgba(0, 0, 0, 0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)';
+                  }}
+                >
                   <div className="card-body d-flex align-items-center">
                     <div className="flex-shrink-0">
                       <div className="bg-success bg-opacity-10 text-success rounded-3 p-3">
@@ -137,7 +147,19 @@ const Dashboard = () => {
               </div>
 
               <div className="col-md-6 col-lg-3">
-                <div className="card border-0 shadow-sm rounded-3 h-100">
+                <div 
+                  className="card border-0 shadow-sm rounded-3 h-100" 
+                  style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+                  onClick={() => navigate('/projects')}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-5px)';
+                    e.currentTarget.style.boxShadow = '0 0.5rem 1.5rem rgba(0, 0, 0, 0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)';
+                  }}
+                >
                   <div className="card-body d-flex align-items-center">
                     <div className="flex-shrink-0">
                       <div className="bg-info bg-opacity-10 text-info rounded-3 p-3">
@@ -156,7 +178,19 @@ const Dashboard = () => {
               </div>
 
               <div className="col-md-6 col-lg-3">
-                <div className="card border-0 shadow-sm rounded-3 h-100">
+                <div 
+                  className="card border-0 shadow-sm rounded-3 h-100" 
+                  style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+                  onClick={() => navigate('/tasks')}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-5px)';
+                    e.currentTarget.style.boxShadow = '0 0.5rem 1.5rem rgba(0, 0, 0, 0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)';
+                  }}
+                >
                   <div className="card-body d-flex align-items-center">
                     <div className="flex-shrink-0">
                       <div className="bg-warning bg-opacity-10 text-warning rounded-3 p-3">

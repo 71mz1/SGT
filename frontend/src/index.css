@@ -21,6 +21,94 @@ body {
   padding-top: 20px;
 }
 
+/* Appearance (light/dark/system) - driven by ThemeContext via data-bs-theme on <html> */
+html[data-bs-theme='dark'] body,
+html[data-bs-theme='dark'] .min-vh-100 {
+  background-color: #121826 !important;
+  color: #e5e7eb;
+}
+
+html[data-bs-theme='dark'] .card,
+html[data-bs-theme='dark'] .form-card,
+html[data-bs-theme='dark'] .dashboard-content,
+html[data-bs-theme='dark'] .list-card,
+html[data-bs-theme='dark'] .member-card,
+html[data-bs-theme='dark'] .group-card,
+html[data-bs-theme='dark'] .project-card,
+html[data-bs-theme='dark'] .task-card {
+  background: #0f172a;
+  border-color: rgba(148, 163, 184, 0.25);
+  color: inherit;
+}
+
+html[data-bs-theme='dark'] .card-header,
+html[data-bs-theme='dark'] .dashboard-nav,
+html[data-bs-theme='dark'] .user-info-card {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border-color: rgba(148, 163, 184, 0.25) !important;
+}
+
+html[data-bs-theme='dark'] .card-title,
+html[data-bs-theme='dark'] .page-title,
+html[data-bs-theme='dark'] .welcome-title,
+html[data-bs-theme='dark'] .user-info-title,
+html[data-bs-theme='dark'] .group-name,
+html[data-bs-theme='dark'] .project-name,
+html[data-bs-theme='dark'] .task-title,
+html[data-bs-theme='dark'] .navbar-brand {
+  color: #e5e7eb !important;
+}
+
+html[data-bs-theme='dark'] .text-muted,
+html[data-bs-theme='dark'] label,
+html[data-bs-theme='dark'] .card-body,
+html[data-bs-theme='dark'] .page-subtitle,
+html[data-bs-theme='dark'] .stat-label,
+html[data-bs-theme='dark'] .member-email,
+html[data-bs-theme='dark'] .group-description,
+html[data-bs-theme='dark'] .project-description,
+html[data-bs-theme='dark'] .project-info,
+html[data-bs-theme='dark'] .project-tasks,
+html[data-bs-theme='dark'] .task-description,
+html[data-bs-theme='dark'] .task-info,
+html[data-bs-theme='dark'] .group-admin,
+html[data-bs-theme='dark'] .group-members,
+html[data-bs-theme='dark'] .member-role,
+html[data-bs-theme='dark'] .empty-message {
+  color: rgba(229, 231, 235, 0.8) !important;
+}
+
+html[data-bs-theme='dark'] .form-input,
+html[data-bs-theme='dark'] .form-textarea,
+html[data-bs-theme='dark'] .form-select,
+html[data-bs-theme='dark'] .task-status-select {
+  background: #0b1220;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: #e5e7eb;
+}
+
+html[data-bs-theme='dark'] .navbar,
+html[data-bs-theme='dark'] .navbar.bg-white,
+html[data-bs-theme='dark'] .navbar.navbar-light,
+html[data-bs-theme='dark'] .bg-white {
+  background: rgba(15, 23, 42, 0.7) !important;
+  border-bottom-color: rgba(148, 163, 184, 0.25) !important;
+}
+
+html[data-bs-theme='dark'] .navbar-link,
+html[data-bs-theme='dark'] .navbar-link.active {
+  color: rgba(229, 231, 235, 0.85);
+}
+
+html[data-bs-theme='dark'] .navbar-link:hover {
+  background: rgba(74, 105, 189, 0.15);
+}
+
+html[data-bs-theme='dark'] .badge {
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+
 .App {
   min-height: 100vh;
   display: flex;

@@ -94,14 +94,7 @@ const Groups = () => {
   };
 
   return (
-    <div className="min-vh-100 bg-light">
-      {/* Page Header */}
-      <div className="bg-white border-bottom py-4">
-        <div className="container">
-          <h1 className="h3 mb-1">Groups Management</h1>
-          <p className="text-muted mb-0">Create groups and manage members</p>
-        </div>
-      </div>
+    <div>
 
       <main className="container py-4">
         {/* Error Alert */}

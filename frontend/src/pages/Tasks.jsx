@@ -134,17 +134,7 @@ const Tasks = () => {
   const isAdmin = user?.role === 'admin';
 
   return (
-    <div className="min-vh-100 bg-light">
-      {/* Page Header */}
-      <div className="bg-white border-bottom py-4">
-        <div className="container">
-          <h1 className="h3 mb-1">{isAdmin ? 'Tasks Management' : 'My Tasks'}</h1>
-          <p className="text-muted mb-0">
-            {isAdmin ? 'Create and manage tasks' : 'View and update your assigned tasks'}
-          </p>
-        </div>
-      </div>
-
+      <div>
       <main className="container py-4">
         {/* Error Alert */}
         {error && (
