@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Group;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
@@ -24,8 +23,17 @@ class DashboardController extends Controller
 
     private function adminDashboard($user)
     {
+        $adminGroupIds = $user->administeredGroups()->pluck('id');
+
+        $totalMembers = User::where('role', 'member')
+            ->whereHas('groups', function ($q) use ($adminGroupIds) {
+                $q->whereIn('groups.id', $adminGroupIds);
+            })
+            ->count();
+
         $stats = [
             'total_groups' => $user->administeredGroups()->count(),
+            'total_members' => $totalMembers,
             'total_projects' => Project::whereHas('group', function ($query) use ($user) {
                 $query->where('admin_id', $user->id);
             })->count(),

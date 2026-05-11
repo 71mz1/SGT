@@ -12,18 +12,16 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
+
         if ($user->role === 'admin') {
             $projects = Project::with('group', 'tasks')->get();
         } else {
             // Members can only see projects from their groups
-            $projects = Project::whereHas('group', function ($query) use ($user) {
-                $query->whereHas('users', function ($q) use ($user) {
-                    $q->where('user_id', $user->id);
-                });
+            $projects = Project::whereHas('group.users', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
             })->with('group', 'tasks')->get();
         }
-        
+
         return response()->json($projects);
     }
 
@@ -36,13 +34,13 @@ class ProjectController extends Controller
         ]);
 
         $user = Auth::user();
-        
+
         if ($user->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        // Check if user is admin of the group
         $group = Group::findOrFail($request->group_id);
+
         if ($group->admin_id !== $user->id) {
             return response()->json(['message' => 'You are not the admin of this group'], 403);
         }
@@ -59,9 +57,15 @@ class ProjectController extends Controller
     public function show(Project $project)
     {
         $user = Auth::user();
-        
-        // Check if user is admin or member of the project's group
-        if ($user->role !== 'admin' && !$user->groups()->where('groups.id', $project->group_id)->exists()) {
+
+        $canAccess = $user->role === 'admin'
+            || Group::where('id', $project->group_id)
+                ->whereHas('users', function ($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                })
+                ->exists();
+
+        if (!$canAccess) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -76,12 +80,11 @@ class ProjectController extends Controller
         ]);
 
         $user = Auth::user();
-        
+
         if ($user->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        // Check if user is admin of the project's group
         if ($project->group->admin_id !== $user->id) {
             return response()->json(['message' => 'You are not the admin of this project group'], 403);
         }
@@ -97,12 +100,11 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         $user = Auth::user();
-        
+
         if ($user->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        // Check if user is admin of the project's group
         if ($project->group->admin_id !== $user->id) {
             return response()->json(['message' => 'You are not the admin of this project group'], 403);
         }
@@ -110,5 +112,28 @@ class ProjectController extends Controller
         $project->delete();
 
         return response()->json(['message' => 'Project deleted successfully']);
+    }
+
+    public function members(Project $project)
+    {
+        $user = Auth::user();
+
+        $canAccess = $user->role === 'admin'
+            || Group::where('id', $project->group_id)
+                ->whereHas('users', function ($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                })
+                ->exists();
+
+        if (!$canAccess) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $members = $project->group
+            ->users()
+            ->where('role', 'member')
+            ->get();
+
+        return response()->json($members);
     }
 }

@@ -106,7 +106,20 @@ const Dashboard = () => {
             {/* Stats Cards */}
             <div className="row g-4 mb-4">
               <div className="col-md-6 col-lg-3">
-                <div className="card border-0 shadow-sm rounded-3 h-100">
+                <button
+                  type="button"
+                  onClick={() => navigate('/members')}
+                  className="card border-0 shadow-sm rounded-3 h-100 w-100 bg-transparent text-start"
+                  style={{ cursor: 'pointer', transition: 'all 0.3s ease', border: 'none' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.1)';
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
                   <div className="card-body d-flex align-items-center">
                     <div className="flex-shrink-0">
                       <div className="bg-primary bg-opacity-10 text-primary rounded-3 p-3">
@@ -117,14 +130,27 @@ const Dashboard = () => {
                     </div>
                     <div className="flex-grow-1 ms-3">
                       <p className="text-muted mb-1 small">Total Members</p>
-                      <h3 className="h4 mb-0">{stats?.total_members || 0}</h3>
+<h3 className="h4 mb-0">{stats?.total_members ?? 0}</h3>
                     </div>
                   </div>
-                </div>
+                </button>
               </div>
 
               <div className="col-md-6 col-lg-3">
-                <div className="card border-0 shadow-sm rounded-3 h-100">
+                <button
+                  type="button"
+                  onClick={() => navigate('/groups')}
+                  className="card border-0 shadow-sm rounded-3 h-100 w-100 bg-transparent text-start"
+                  style={{ cursor: 'pointer', transition: 'all 0.3s ease', border: 'none' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.1)';
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
                   <div className="card-body d-flex align-items-center">
                     <div className="flex-shrink-0">
                       <div className="bg-success bg-opacity-10 text-success rounded-3 p-3">
@@ -138,11 +164,24 @@ const Dashboard = () => {
                       <h3 className="h4 mb-0">{stats?.total_groups || 0}</h3>
                     </div>
                   </div>
-                </div>
+                </button>
               </div>
 
               <div className="col-md-6 col-lg-3">
-                <div className="card border-0 shadow-sm rounded-3 h-100">
+                <button
+                  type="button"
+                  onClick={() => navigate('/projects')}
+                  className="card border-0 shadow-sm rounded-3 h-100 w-100 bg-transparent text-start"
+                  style={{ cursor: 'pointer', transition: 'all 0.3s ease', border: 'none' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.1)';
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
                   <div className="card-body d-flex align-items-center">
                     <div className="flex-shrink-0">
                       <div className="bg-info bg-opacity-10 text-info rounded-3 p-3">
@@ -157,11 +196,24 @@ const Dashboard = () => {
                       <h3 className="h4 mb-0">{stats?.total_projects || 0}</h3>
                     </div>
                   </div>
-                </div>
+                </button>
               </div>
 
               <div className="col-md-6 col-lg-3">
-                <div className="card border-0 shadow-sm rounded-3 h-100">
+                <button
+                  type="button"
+                  onClick={() => navigate('/tasks')}
+                  className="card border-0 shadow-sm rounded-3 h-100 w-100 bg-transparent text-start"
+                  style={{ cursor: 'pointer', transition: 'all 0.3s ease', border: 'none' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.1)';
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
                   <div className="card-body d-flex align-items-center">
                     <div className="flex-shrink-0">
                       <div className="bg-warning bg-opacity-10 text-warning rounded-3 p-3">
@@ -176,7 +228,7 @@ const Dashboard = () => {
                       <h3 className="h4 mb-0">{stats?.total_tasks || 0}</h3>
                     </div>
                   </div>
-                </div>
+                </button>
               </div>
             </div>
 

@@ -43,7 +43,7 @@ const Navbar = () => {
     return null;
   }
 
-  if (!token || !user) {
+  if (!token) {
     return null;
   }
 
@@ -160,16 +160,18 @@ const Navbar = () => {
           </ul>
 
           <div className="d-flex align-items-center gap-3">
-            <div className="d-flex align-items-center gap-2">
-              <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
-                   style={{ width: '35px', height: '35px', fontSize: '14px', fontWeight: '600' }}>
-                {user?.name?.charAt(0)?.toUpperCase() || '?'}
+            {user && (
+              <div className="d-flex align-items-center gap-2">
+                <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                     style={{ width: '35px', height: '35px', fontSize: '14px', fontWeight: '600' }}>
+                  {user.name?.charAt(0).toUpperCase()}
+                </div>
+                <div className="d-none d-lg-block">
+                  <div className="small fw-medium">{user.name}</div>
+                  <div className="small text-muted text-capitalize">{user.role}</div>
+                </div>
               </div>
-              <div className="d-none d-lg-block">
-                <div className="small fw-medium">{user?.name || 'User'}</div>
-                <div className="small text-muted text-capitalize">{user?.role || 'member'}</div>
-              </div>
-            </div>
+            )}
 
             <button
               onClick={handleLogout}

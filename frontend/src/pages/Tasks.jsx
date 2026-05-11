@@ -5,6 +5,8 @@ const Tasks = () => {
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -39,12 +41,10 @@ const Tasks = () => {
 
       if (currentUser?.role === 'admin') {
         try {
-          const [projectsRes, usersRes] = await Promise.all([
-            api.get('/projects'),
-            api.get('/members')
-          ]);
+          const projectsRes = await api.get('/projects');
           setProjects(projectsRes.data);
-          setUsers(usersRes.data.filter(u => u.role === 'member'));
+          // users will be loaded dynamically based on selected project
+          setUsers([]);
         } catch (error) {
           setError('Failed to load some admin data');
         }
@@ -59,12 +59,45 @@ const Tasks = () => {
     }
   };
 
+
+  const fetchMembersForProject = async (projectId) => {
+    if (!projectId) {
+      setUsers([]);
+      return;
+    }
+
+    setMembersLoading(true);
+    try {
+      const res = await api.get(`/projects/${projectId}/members`);
+      setUsers(res.data);
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to load project members');
+      setUsers([]);
+    } finally {
+      setMembersLoading(false);
+    }
+  };
+
   const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === 'project_id') {
+      setFormData({
+        ...formData,
+        project_id: value,
+        // reset assigned user when switching project
+        assigned_to: ''
+      });
+      fetchMembersForProject(value);
+      return;
+    }
+
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -298,8 +331,9 @@ const Tasks = () => {
                           className="form-select"
                           required
                           aria-label="Assign task to member"
+                          disabled={membersLoading}
                         >
-                          <option value="">Select a member...</option>
+                          <option value="">{membersLoading ? 'Loading members...' : 'Select a member...'}</option>
                           {users.map((u) => (
                             <option key={u.id} value={u.id}>
                               {u.name}
@@ -307,6 +341,7 @@ const Tasks = () => {
                           ))}
                         </select>
                       </div>
+
 
                       <button
                         type="submit"
