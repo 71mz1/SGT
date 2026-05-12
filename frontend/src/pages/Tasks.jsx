@@ -20,7 +20,24 @@ const Tasks = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterPriority, setFilterPriority] = useState('all');
+  const [filterProject, setFilterProject] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
+
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    title: '',
+    description: '',
+    deadline: '',
+    priority: 'medium',
+    project_id: '',
+    assigned_to: ''
+  });
+  const [editUsers, setEditUsers] = useState([]);
+  const [editMembersLoading, setEditMembersLoading] = useState(false);
 
   const { isAdmin, authLoading } = useAuth();
 
@@ -111,7 +128,8 @@ const Tasks = () => {
         project_id: '',
         assigned_to: ''
       });
-      fetchDataWithUser(user);
+      setUsers([]);
+      fetchData();
       setTimeout(() => setSuccess(''), 4000);
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to create task');
@@ -123,7 +141,7 @@ const Tasks = () => {
       await api.patch(`/tasks/${taskId}/status`, { status: newStatus });
       setSuccess(`Task "${taskTitle}" status updated successfully!`);
       setError('');
-      fetchDataWithUser(user);
+      fetchData();
       setTimeout(() => setSuccess(''), 4000);
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Failed to update task status';
@@ -137,7 +155,7 @@ const Tasks = () => {
         await api.delete(`/tasks/${id}`);
         setSuccess('Task deleted successfully!');
         setError('');
-        fetchDataWithUser(user);
+        fetchData();
         setTimeout(() => setSuccess(''), 4000);
       } catch (error) {
         const errorMessage = error.response?.data?.message || 'Failed to delete task';
@@ -165,6 +183,81 @@ const Tasks = () => {
     return classes[priority] || 'bg-secondary';
   };
 
+  const getMemberStatusOptions = (task) => {
+    if (task.status === 'en_attente') {
+      return [
+        { value: 'en_attente', label: 'En Attente' },
+        { value: 'en_cours', label: 'En Cours' }
+      ];
+    }
+
+    if (task.status === 'en_cours') {
+      return [
+        { value: 'en_cours', label: 'En Cours' },
+        { value: 'validation', label: 'Validation' }
+      ];
+    }
+
+    return [];
+  };
+
+  const getStatusLabel = (status) => {
+    const labels = {
+      en_attente: 'En Attente',
+      en_cours: 'En Cours',
+      validation: 'Validation',
+      terminee: 'Terminée'
+    };
+    return labels[status] || status;
+  };
+
+  const getPriorityLabel = (priority) => {
+    const labels = {
+      low: 'Low',
+      medium: 'Medium',
+      high: 'High'
+    };
+    return labels[priority] || priority;
+  };
+
+  const getAssignedMemberName = (task) => {
+    return task.assigned_user?.name || task.assignedUser?.name || 'Unassigned';
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'No deadline';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const handleValidateTask = async (taskId, taskTitle) => {
+    try {
+      await api.patch(`/tasks/${taskId}/validate`);
+      setSuccess(`Task "${taskTitle}" validated successfully!`);
+      setError('');
+      fetchData();
+      setTimeout(() => setSuccess(''), 4000);
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to validate task');
+    }
+  };
+
+  const handleReturnTask = async (taskId, taskTitle) => {
+    try {
+      await api.patch(`/tasks/${taskId}/return`);
+      setSuccess(`Task "${taskTitle}" returned successfully!`);
+      setError('');
+      fetchData();
+      setTimeout(() => setSuccess(''), 4000);
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to return task');
+    }
+  };
+
   const EmptyState = ({ title, message, actionLabel, onAction }) => (
     <div className="text-center py-5 text-muted">
       <div className="mb-2 fs-4">{title}</div>
@@ -177,12 +270,80 @@ const Tasks = () => {
     </div>
   );
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'No deadline';
-    const date = new Date(dateString);
-    return date.toISOString().split('T')[0];
+  const handleViewTask = (task) => {
+    setSelectedTask(task);
+    setShowViewModal(true);
   };
 
+  const handleEditTask = (task) => {
+    setEditingTask(task);
+    setEditFormData({
+      title: task.title,
+      description: task.description || '',
+      deadline: task.deadline ? task.deadline.split('T')[0] : '',
+      priority: task.priority,
+      project_id: task.project_id,
+      assigned_to: task.assigned_to
+    });
+    setEditUsers([]);
+    if (task.project_id) {
+      fetchMembersForEdit(task.project_id);
+    }
+    setShowEditModal(true);
+  };
+
+  const fetchMembersForEdit = async (projectId) => {
+    if (!projectId) {
+      setEditUsers([]);
+      return;
+    }
+
+    setEditMembersLoading(true);
+    try {
+      const res = await api.get(`/projects/${projectId}/members`);
+      setEditUsers(res.data);
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to load project members');
+      setEditUsers([]);
+    } finally {
+      setEditMembersLoading(false);
+    }
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === 'project_id') {
+      setEditFormData({
+        ...editFormData,
+        project_id: value,
+        assigned_to: ''
+      });
+      fetchMembersForEdit(value);
+      return;
+    }
+
+    setEditFormData({
+      ...editFormData,
+      [name]: value
+    });
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    try {
+      await api.put(`/tasks/${editingTask.id}`, editFormData);
+      setSuccess('Task updated successfully!');
+      setShowEditModal(false);
+      setEditingTask(null);
+      fetchData();
+      setTimeout(() => setSuccess(''), 4000);
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to update task');
+    }
+  };
 
   // Filter and sort tasks
   const getFilteredAndSortedTasks = () => {
@@ -191,6 +352,16 @@ const Tasks = () => {
     // Apply status filter
     if (filterStatus !== 'all') {
       filtered = filtered.filter(task => task.status === filterStatus);
+    }
+
+    // Apply priority filter
+    if (filterPriority !== 'all') {
+      filtered = filtered.filter(task => task.priority === filterPriority);
+    }
+
+    // Apply project filter (admin only)
+    if (isAdmin && filterProject !== 'all') {
+      filtered = filtered.filter(task => task.project_id === parseInt(filterProject));
     }
 
     // Apply sorting
@@ -339,9 +510,9 @@ const Tasks = () => {
                           className="form-select"
                           required
                           aria-label="Assign task to member"
-                          disabled={membersLoading}
+                          disabled={membersLoading || !formData.project_id}
                         >
-                          <option value="">{membersLoading ? 'Loading members...' : 'Select a member...'}</option>
+                          <option value="">{membersLoading ? 'Loading members...' : !formData.project_id ? 'Select a project first...' : 'Select a member...'}</option>
                           {users.map((u) => (
                             <option key={u.id} value={u.id}>
                               {u.name}
@@ -377,8 +548,8 @@ const Tasks = () => {
 
                   {/* Filter and Sort Controls */}
                   <div className="row g-2">
-                    <div className="col-12 col-sm-6">
-                      <label htmlFor="filterStatus" className="form-label small mb-1">Filter by Status</label>
+                    <div className="col-12 col-sm-6 col-md-3">
+                      <label htmlFor="filterStatus" className="form-label small mb-1">Status</label>
                       <select
                         id="filterStatus"
                         value={filterStatus}
@@ -386,15 +557,49 @@ const Tasks = () => {
                         className="form-select form-select-sm"
                         aria-label="Filter tasks by status"
                       >
-                        <option value="all">All Statuses</option>
+                        <option value="all">All</option>
                         <option value="en_attente">Pending</option>
                         <option value="en_cours">In Progress</option>
                         <option value="validation">Validation</option>
                         <option value="terminee">Completed</option>
                       </select>
                     </div>
-                    <div className="col-12 col-sm-6">
-                      <label htmlFor="sortBy" className="form-label small mb-1">Sort by</label>
+                    <div className="col-12 col-sm-6 col-md-3">
+                      <label htmlFor="filterPriority" className="form-label small mb-1">Priority</label>
+                      <select
+                        id="filterPriority"
+                        value={filterPriority}
+                        onChange={(e) => setFilterPriority(e.target.value)}
+                        className="form-select form-select-sm"
+                        aria-label="Filter tasks by priority"
+                      >
+                        <option value="all">All</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                    </div>
+                    {isAdmin && (
+                      <div className="col-12 col-sm-6 col-md-3">
+                        <label htmlFor="filterProject" className="form-label small mb-1">Project</label>
+                        <select
+                          id="filterProject"
+                          value={filterProject}
+                          onChange={(e) => setFilterProject(e.target.value)}
+                          className="form-select form-select-sm"
+                          aria-label="Filter tasks by project"
+                        >
+                          <option value="all">All Projects</option>
+                          {projects.map((project) => (
+                            <option key={project.id} value={project.id}>
+                              {project.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    <div className={`col-12 col-sm-6 ${isAdmin ? 'col-md-3' : 'col-md-6'}`}>
+                      <label htmlFor="sortBy" className="form-label small mb-1">Sort</label>
                       <select
                         id="sortBy"
                         value={sortBy}
@@ -402,9 +607,9 @@ const Tasks = () => {
                         className="form-select form-select-sm"
                         aria-label="Sort tasks by"
                       >
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="deadline">By Deadline</option>
+                        <option value="newest">Newest</option>
+                        <option value="oldest">Oldest</option>
+                        <option value="deadline">Deadline</option>
                       </select>
                     </div>
                   </div>
@@ -428,67 +633,99 @@ const Tasks = () => {
                     <div className="list-group list-group-flush">
                       {filteredTasks.map((task) => (
                         <div key={task.id} className="list-group-item p-3 p-md-4">
-                          <div className="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
+                          <div className="d-flex justify-content-between align-items-start mb-3">
                             <div className="flex-grow-1">
                               <h6 className="mb-1">{task.title}</h6>
-                              <p className="text-muted small mb-0">{task.description}</p>
-                            </div>
-                            {isAdmin && (
-                              <button
-                                onClick={() => deleteTask(task.id, task.title)}
-                                className="btn btn-outline-danger btn-sm"
-                                aria-label={`Delete task ${task.title}`}
-                              >
-                                Delete
-                              </button>
-                            )}
-                          </div>
-
-                          <div className="row g-2 mb-3">
-                            <div className="col-12 col-sm-6 col-md-6">
-                              <small className="text-muted">Project:</small>
-                              <div className="small">{task.project?.name || 'N/A'}</div>
-                            </div>
-                            <div className="col-12 col-sm-6 col-md-6">
-                              <small className="text-muted">Assigned To:</small>
-                              <div className="small">{task.assignedUser?.name || 'N/A'}</div>
-                            </div>
-                            <div className="col-12 col-sm-6 col-md-6">
-                              <small className="text-muted">Deadline:</small>
-                              <div className="small">{formatDate(task.deadline)}</div>
-                            </div>
-                            <div className="col-12 col-sm-6 col-md-6">
-                              <small className="text-muted">Priority:</small>
-                              <div>
-                                <span className={`badge ${getPriorityBadgeClass(task.priority)}`} title={`Priority: ${task.priority}`}>
-                                  {task.priority}
-                                </span>
+                              {task.description && (
+                                <p className="text-muted small mb-2">{task.description}</p>
+                              )}
+                              <div className="d-flex flex-wrap gap-3 small text-muted">
+                                <span><strong>Project:</strong> {task.project?.name || 'N/A'}</span>
+                                <span><strong>Assigned:</strong> {getAssignedMemberName(task)}</span>
+                                <span><strong>Deadline:</strong> {formatDate(task.deadline)}</span>
                               </div>
+                            </div>
+                            <div className="d-flex gap-2 flex-wrap">
+                              <button
+                                onClick={() => handleViewTask(task)}
+                                className="btn btn-outline-primary btn-sm"
+                                aria-label={`View details for ${task.title}`}
+                              >
+                                View
+                              </button>
+                              {isAdmin && (
+                                <>
+                                  <button
+                                    onClick={() => handleEditTask(task)}
+                                    className="btn btn-outline-secondary btn-sm"
+                                    aria-label={`Edit task ${task.title}`}
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => deleteTask(task.id, task.title)}
+                                    className="btn btn-outline-danger btn-sm"
+                                    aria-label={`Delete task ${task.title}`}
+                                  >
+                                    Delete
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </div>
 
                           <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <div className="d-flex align-items-center gap-2">
-                              <small className="text-muted">Status:</small>
-                              <span className={`badge ${getStatusBadgeClass(task.status)}`} title={`Status: ${task.status}`} aria-label={`Task status: ${task.status === 'en_attente' ? 'Pending' : task.status === 'en_cours' ? 'In Progress' : task.status === 'validation' ? 'Validation' : 'Completed'}`}>
-                                {task.status === 'en_attente' ? 'En Attente' :
-                                 task.status === 'en_cours' ? 'En Cours' :
-                                 task.status === 'validation' ? 'Validation' :
-                                 task.status === 'terminee' ? 'Terminée' : task.status}
+                              <span className={`badge ${getStatusBadgeClass(task.status)}`}>
+                                {getStatusLabel(task.status)}
+                              </span>
+                              <span className={`badge ${getPriorityBadgeClass(task.priority)}`}>
+                                {getPriorityLabel(task.priority)}
                               </span>
                             </div>
-                            <select
-                              value={task.status}
-                              onChange={(e) => updateTaskStatus(task.id, e.target.value, task.title)}
-                              className="form-select form-select-sm w-auto"
-                              disabled={!isAdmin && task.status === 'terminee'}
-                              aria-label={`Change task status for ${task.title}`}
-                            >
-                              <option value="en_attente">En Attente</option>
-                              <option value="en_cours">En Cours</option>
-                              <option value="validation">Validation</option>
-                              {isAdmin && <option value="terminee">Terminée</option>}
-                            </select>
+                            {isAdmin && task.status === 'validation' ? (
+                              <div className="d-flex gap-2">
+                                <button
+                                  type="button"
+                                  className="btn btn-success btn-sm"
+                                  onClick={() => handleValidateTask(task.id, task.title)}
+                                >
+                                  Validate
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-warning btn-sm"
+                                  onClick={() => handleReturnTask(task.id, task.title)}
+                                >
+                                  Return
+                                </button>
+                              </div>
+                            ) : task.status === 'terminee' ? (
+                              <span className="text-muted small">Completed</span>
+                            ) : !isAdmin && task.status === 'validation' ? (
+                              <span className="text-muted small">Validation</span>
+                            ) : (
+                              <select
+                                value={task.status}
+                                onChange={(e) => updateTaskStatus(task.id, e.target.value, task.title)}
+                                className="form-select form-select-sm w-auto"
+                                aria-label={`Change task status for ${task.title}`}
+                              >
+                                {isAdmin ? (
+                                  <>
+                                    <option value="en_attente">En Attente</option>
+                                    <option value="en_cours">En Cours</option>
+                                    <option value="validation">Validation</option>
+                                  </>
+                                ) : (
+                                  getMemberStatusOptions(task).map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                      {option.label}
+                                    </option>
+                                  ))
+                                )}
+                              </select>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -500,6 +737,185 @@ const Tasks = () => {
           </div>
         )}
       </main>
+
+      {/* View Task Modal */}
+      {showViewModal && selectedTask && (
+        <div className="modal show d-block" tabIndex="-1" role="dialog">
+          <div className="modal-dialog modal-lg" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Task Details</h5>
+                <button type="button" className="btn-close" onClick={() => setShowViewModal(false)} aria-label="Close"></button>
+              </div>
+              <div className="modal-body">
+                <div className="row g-3">
+                  <div className="col-12">
+                    <h6>Title</h6>
+                    <p>{selectedTask.title}</p>
+                  </div>
+                  <div className="col-12">
+                    <h6>Description</h6>
+                    <p>{selectedTask.description || 'No description provided.'}</p>
+                  </div>
+                  <div className="col-md-6">
+                    <h6>Project</h6>
+                    <p>{selectedTask.project?.name || 'N/A'}</p>
+                  </div>
+                  <div className="col-md-6">
+                    <h6>Group</h6>
+                    <p>{selectedTask.project?.group?.name || 'N/A'}</p>
+                  </div>
+                  <div className="col-md-6">
+                    <h6>Assigned Member</h6>
+                    <p>{getAssignedMemberName(selectedTask)}</p>
+                  </div>
+                  <div className="col-md-6">
+                    <h6>Deadline</h6>
+                    <p>{formatDate(selectedTask.deadline)}</p>
+                  </div>
+                  <div className="col-md-6">
+                    <h6>Priority</h6>
+                    <p><span className={`badge ${getPriorityBadgeClass(selectedTask.priority)}`}>{getPriorityLabel(selectedTask.priority)}</span></p>
+                  </div>
+                  <div className="col-md-6">
+                    <h6>Status</h6>
+                    <p><span className={`badge ${getStatusBadgeClass(selectedTask.status)}`}>{getStatusLabel(selectedTask.status)}</span></p>
+                  </div>
+                  {selectedTask.created_at && (
+                    <div className="col-md-6">
+                      <h6>Created</h6>
+                      <p>{new Date(selectedTask.created_at).toLocaleString()}</p>
+                    </div>
+                  )}
+                  {selectedTask.updated_at && (
+                    <div className="col-md-6">
+                      <h6>Updated</h6>
+                      <p>{new Date(selectedTask.updated_at).toLocaleString()}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowViewModal(false)}>Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Task Modal */}
+      {showEditModal && editingTask && (
+        <div className="modal show d-block" tabIndex="-1" role="dialog">
+          <div className="modal-dialog modal-lg" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Edit Task</h5>
+                <button type="button" className="btn-close" onClick={() => setShowEditModal(false)} aria-label="Close"></button>
+              </div>
+              <div className="modal-body">
+                <form onSubmit={handleEditSubmit}>
+                  <div className="mb-3">
+                    <label htmlFor="editTitle" className="form-label">Task Title</label>
+                    <input
+                      type="text"
+                      id="editTitle"
+                      name="title"
+                      value={editFormData.title}
+                      onChange={handleEditChange}
+                      className="form-control"
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="editDescription" className="form-label">Description</label>
+                    <textarea
+                      id="editDescription"
+                      name="description"
+                      value={editFormData.description}
+                      onChange={handleEditChange}
+                      className="form-control"
+                      rows="3"
+                    />
+                  </div>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label htmlFor="editDeadline" className="form-label">Deadline</label>
+                      <input
+                        type="date"
+                        id="editDeadline"
+                        name="deadline"
+                        value={editFormData.deadline}
+                        onChange={handleEditChange}
+                        className="form-control"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label htmlFor="editPriority" className="form-label">Priority</label>
+                      <select
+                        id="editPriority"
+                        name="priority"
+                        value={editFormData.priority}
+                        onChange={handleEditChange}
+                        className="form-select"
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="row g-3 mt-1">
+                    <div className="col-md-6">
+                      <label htmlFor="editProject" className="form-label">Project</label>
+                      <select
+                        id="editProject"
+                        name="project_id"
+                        value={editFormData.project_id}
+                        onChange={handleEditChange}
+                        className="form-select"
+                        required
+                      >
+                        <option value="">Select a project...</option>
+                        {projects.map((project) => (
+                          <option key={project.id} value={project.id}>
+                            {project.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label htmlFor="editAssigned" className="form-label">Assign To</label>
+                      <select
+                        id="editAssigned"
+                        name="assigned_to"
+                        value={editFormData.assigned_to}
+                        onChange={handleEditChange}
+                        className="form-select"
+                        disabled={editMembersLoading}
+                        required
+                      >
+                        <option value="">{editMembersLoading ? 'Loading members...' : 'Select a member...'}</option>
+                        {editUsers.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)}>Cancel</button>
+                    <button type="submit" className="btn btn-primary">Update Task</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Backdrop */}
+      {(showViewModal || showEditModal) && <div className="modal-backdrop show"></div>}
     </div>
   );
 };

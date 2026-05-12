@@ -405,7 +405,7 @@ const Dashboard = () => {
                                 <small className="text-muted">{task.description.substring(0, 50)}...</small>
                               )}
                             </td>
-                            <td>{task.assigned_user?.name || task.assignedUser?.name || 'N/A'}</td>
+                            <td>{task.assigned_user?.name || task.assignedUser?.name || 'Unassigned'}</td>
                             <td>{task.project?.name || 'N/A'}</td>
                             <td>{formatDate(task.deadline || task.date_limite)}</td>
                             <td>

@@ -15,13 +15,17 @@ class TaskController extends Controller
         $user = Auth::user();
         
         if ($user->role === 'admin') {
-            $tasks = Task::with('project.group', 'assignedUser')->get();
+            $tasks = Task::whereHas('project.group', function ($query) use ($user) {
+                $query->where('admin_id', $user->id);
+            })
+                ->with('project.group', 'assignedUser')
+                ->latest()
+                ->get();
         } else {
             // Members can only see their assigned tasks
-            // Ensure both are integers for proper comparison
-            $userId = (int) $user->id;
-            $tasks = Task::where('assigned_to', $userId)
+            $tasks = Task::where('assigned_to', $user->id)
                 ->with('project.group', 'assignedUser')
+                ->latest()
                 ->get();
         }
         
@@ -114,17 +118,8 @@ class TaskController extends Controller
             return response()->json($task->load('project.group', 'assignedUser'));
         }
 
-        // Members can only update their own assigned tasks
         if ($user->role === 'member') {
-            if ($task->assigned_to !== $user->id) {
-                return response()->json(['message' => 'Unauthorized - You can only update tasks assigned to you'], 403);
-            }
-
-            // Members cannot change the assigned_to field
-            $updateData = $request->only(['title', 'description', 'deadline', 'priority']);
-            $task->update($updateData);
-
-            return response()->json($task->load('project.group', 'assignedUser'));
+            return response()->json(['message' => 'Members are not allowed to edit task details'], 403);
         }
 
         return response()->json(['message' => 'Unauthorized'], 403);
@@ -156,19 +151,35 @@ class TaskController extends Controller
 
         $user = Auth::user();
         
-        // Check if user is admin or the assigned user
-        if ($user->role !== 'admin' && $task->assigned_to !== $user->id) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        if ($user->role === 'admin') {
+            if ($task->project->group->admin_id !== $user->id) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
+        } else {
+            if ($task->assigned_to !== $user->id) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
         }
 
-        // Members cannot change status of completed tasks
-        if ($user->role === 'member' && $task->status === 'terminee') {
+        if ($task->status === 'terminee') {
             return response()->json(['message' => 'Cannot change status of completed tasks'], 403);
         }
 
-        // Members can only set status to: en_attente, en_cours, validation (not terminee)
-        if ($user->role === 'member' && $request->status === 'terminee') {
-            return response()->json(['message' => 'Members cannot mark tasks as completed'], 403);
+        if ($request->status === 'terminee') {
+            return response()->json(['message' => 'Task completion must be performed by an admin using the validation endpoint'], 403);
+        }
+
+        if ($user->role === 'member') {
+            $validTransitions = [
+                'en_attente' => ['en_attente', 'en_cours'],
+                'en_cours' => ['en_cours', 'validation'],
+            ];
+
+            $currentStatus = $task->status;
+
+            if (!isset($validTransitions[$currentStatus]) || !in_array($request->status, $validTransitions[$currentStatus])) {
+                return response()->json(['message' => 'Invalid status transition for member'], 403);
+            }
         }
 
         $task->update(['status' => $request->status]);
