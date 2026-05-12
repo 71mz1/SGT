@@ -14,14 +14,8 @@ class TaskController extends Controller
     {
         $user = Auth::user();
         
-        // Debug logs
-        \Log::info('TaskController::index - User ID: ' . $user->id);
-        \Log::info('TaskController::index - User Role: ' . $user->role);
-        \Log::info('TaskController::index - User Email: ' . $user->email);
-        
         if ($user->role === 'admin') {
             $tasks = Task::with('project.group', 'assignedUser')->get();
-            \Log::info('TaskController::index - Admin user, returning ' . $tasks->count() . ' tasks');
         } else {
             // Members can only see their assigned tasks
             // Ensure both are integers for proper comparison
@@ -29,17 +23,6 @@ class TaskController extends Controller
             $tasks = Task::where('assigned_to', $userId)
                 ->with('project.group', 'assignedUser')
                 ->get();
-            \Log::info('TaskController::index - Member user, looking for tasks assigned_to: ' . $userId . ' (type: ' . gettype($userId) . ')');
-            \Log::info('TaskController::index - Found ' . $tasks->count() . ' tasks for this member');
-            
-            // Log the actual tasks found
-            foreach ($tasks as $task) {
-                \Log::info('TaskController::index - Task ID: ' . $task->id . ', assigned_to: ' . $task->assigned_to . ' (type: ' . gettype($task->assigned_to) . '), title: ' . $task->title);
-            }
-            
-            // Also check what tasks exist for this user in raw SQL
-            $rawTasks = \DB::table('tasks')->where('assigned_to', $userId)->get();
-            \Log::info('TaskController::index - Raw SQL found ' . $rawTasks->count() . ' tasks');
         }
         
         return response()->json($tasks);
@@ -75,10 +58,6 @@ class TaskController extends Controller
             return response()->json(['message' => 'Assigned user is not a member of this project group'], 422);
         }
 
-        // Debug logs before creating task
-        \Log::info('TaskController::store - Creating task with assigned_to: ' . $request->assigned_to);
-        \Log::info('TaskController::store - Request data: ' . json_encode($request->all()));
-        
         $task = Task::create([
             'title' => $request->title,
             'description' => $request->description,
@@ -88,9 +67,6 @@ class TaskController extends Controller
             'project_id' => (int) $request->project_id,
             'assigned_to' => (int) $request->assigned_to,
         ]);
-
-        // Debug logs after creating task
-        \Log::info('TaskController::store - Task created with ID: ' . $task->id . ', assigned_to: ' . $task->assigned_to);
 
         return response()->json($task->load('project.group', 'assignedUser'), 201);
     }
@@ -196,6 +172,50 @@ class TaskController extends Controller
         }
 
         $task->update(['status' => $request->status]);
+
+        return response()->json($task->load('project.group', 'assignedUser'));
+    }
+
+    public function validateTask(Task $task)
+    {
+        $user = Auth::user();
+
+        if ($user->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Check if task belongs to a project in a group administered by the current admin
+        if ($task->project->group->admin_id !== $user->id) {
+            return response()->json(['message' => 'You are not the admin of this task\'s group'], 403);
+        }
+
+        if ($task->status !== 'validation') {
+            return response()->json(['message' => 'Task must be in validation status'], 422);
+        }
+
+        $task->update(['status' => 'terminee']);
+
+        return response()->json($task->load('project.group', 'assignedUser'));
+    }
+
+    public function returnTask(Task $task)
+    {
+        $user = Auth::user();
+
+        if ($user->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Check if task belongs to a project in a group administered by the current admin
+        if ($task->project->group->admin_id !== $user->id) {
+            return response()->json(['message' => 'You are not the admin of this task\'s group'], 403);
+        }
+
+        if ($task->status !== 'validation') {
+            return response()->json(['message' => 'Task must be in validation status'], 422);
+        }
+
+        $task->update(['status' => 'en_cours']);
 
         return response()->json($task->load('project.group', 'assignedUser'));
     }

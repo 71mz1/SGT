@@ -1,59 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
-  const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const token = localStorage.getItem('token');
-
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      // Call backend to revoke the Sanctum token
-      await api.post('/logout');
-    } catch (error) {
-      // Even if logout fails, clear client-side storage to avoid keeping user stuck
-      console.error('Logout error:', error);
-
-      // If the request failed due to auth middleware (e.g. token missing/invalid),
-      // still clear client-side state.
-    } finally {
-      // Always clear localStorage and redirect, regardless of backend response
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setUser(null);
-
-      // Force route change even if state updates are blocked
-      navigate('/login', { replace: true });
-      window.location.reload();
-    }
-  };
+  const { token, user, role, isAdmin, authLoading, logout } = useAuth();
 
   const hideNavbarRoutes = ['/login', '/register'];
+
+  const isActive = (path) => location.pathname === path;
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  };
+
   if (hideNavbarRoutes.includes(location.pathname)) {
     return null;
   }
 
-  if (!token) {
+  if (authLoading) {
     return null;
   }
 
-  const isAdmin = user?.role === 'admin';
+  if (!token || !user) {
+    return null;
+  }
 
-  const isActive = (path) => location.pathname === path;
+  const navLinks = isAdmin
+    ? [
+        { label: 'Dashboard', path: '/dashboard' },
+        { label: 'Members', path: '/members' },
+        { label: 'Groups', path: '/groups' },
+        { label: 'Projects', path: '/projects' },
+        { label: 'Tasks', path: '/tasks' },
+      ]
+    : [
+        { label: 'Dashboard', path: '/dashboard' },
+        { label: 'My Tasks', path: '/tasks' },
+        { label: 'My Groups', path: '/groups' },
+      ];
 
   return (
-<nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top" aria-label="Main navigation">
-        <div className="container">
+    <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top" aria-label="Main navigation">
+      <div className="container">
         <Link to="/dashboard" className="navbar-brand fw-bold text-primary">
           SGT System
         </Link>
@@ -72,106 +64,37 @@ const Navbar = () => {
 
         <div className="collapse navbar-collapse" id="mainNavbar">
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-            <li className="nav-item">
-              <Link
-                to="/dashboard"
-                className={`nav-link ${isActive('/dashboard') ? 'active fw-semibold' : ''}`}
-                data-bs-toggle="collapse"
-                data-bs-target="#mainNavbar"
-                aria-label="Go to dashboard"
-              >
-                Dashboard
-              </Link>
-            </li>
-
-            {isAdmin ? (
-              <>
-                <li className="nav-item">
-                  <Link
-                    to="/members"
-                    className={`nav-link ${isActive('/members') ? 'active fw-semibold' : ''}`}
-                    data-bs-toggle="collapse"
-                    data-bs-target="#mainNavbar"
-                    aria-label="Go to members page"
-                  >
-                    Members
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link
-                    to="/groups"
-                    className={`nav-link ${isActive('/groups') ? 'active fw-semibold' : ''}`}
-                    data-bs-toggle="collapse"
-                    data-bs-target="#mainNavbar"
-                    aria-label="Go to groups page"
-                  >
-                    Groups
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link
-                    to="/projects"
-                    className={`nav-link ${isActive('/projects') ? 'active fw-semibold' : ''}`}
-                    data-bs-toggle="collapse"
-                    data-bs-target="#mainNavbar"
-                    aria-label="Go to projects page"
-                  >
-                    Projects
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link
-                    to="/tasks"
-                    className={`nav-link ${isActive('/tasks') ? 'active fw-semibold' : ''}`}
-                    data-bs-toggle="collapse"
-                    data-bs-target="#mainNavbar"
-                    aria-label="Go to tasks page"
-                  >
-                    Tasks
-                  </Link>
-                </li>
-              </>
-            ) : (
-              <>
-                <li className="nav-item">
-                  <Link
-                    to="/tasks"
-                    className={`nav-link ${isActive('/tasks') ? 'active fw-semibold' : ''}`}
-                    data-bs-toggle="collapse"
-                    data-bs-target="#mainNavbar"
-                    aria-label="Go to my tasks page"
-                  >
-                    My Tasks
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link
-                    to="/groups"
-                    className={`nav-link ${isActive('/groups') ? 'active fw-semibold' : ''}`}
-                    data-bs-toggle="collapse"
-                    data-bs-target="#mainNavbar"
-                    aria-label="Go to my groups page"
-                  >
-                    My Groups
-                  </Link>
-                </li>
-              </>
-            )}
+            {navLinks.map((link) => (
+              <li className="nav-item" key={link.path}>
+                <Link
+                  to={link.path}
+                  className={`nav-link ${isActive(link.path) ? 'active fw-semibold text-primary' : ''}`}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
           </ul>
 
           <div className="d-flex align-items-center gap-3">
-            {user && (
-              <div className="d-flex align-items-center gap-2">
-                <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
-                     style={{ width: '35px', height: '35px', fontSize: '14px', fontWeight: '600' }}>
-                  {user.name?.charAt(0).toUpperCase()}
-                </div>
-                <div className="d-none d-lg-block">
-                  <div className="small fw-medium">{user.name}</div>
-                  <div className="small text-muted text-capitalize">{user.role}</div>
-                </div>
+            <div className="d-flex align-items-center gap-2">
+              <div
+                className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                style={{
+                  width: '35px',
+                  height: '35px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                }}
+              >
+                {user.name?.charAt(0).toUpperCase()}
               </div>
-            )}
+
+              <div className="d-none d-lg-block">
+                <div className="small fw-medium">{user.name}</div>
+                <div className="small text-muted text-capitalize">{role}</div>
+              </div>
+            </div>
 
             <button
               onClick={handleLogout}

@@ -63,4 +63,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/tasks/{task}', [TaskController::class, 'update']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
     Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus']);
+    Route::patch('/tasks/{task}/validate', [TaskController::class, 'validateTask']);
+    Route::patch('/tasks/{task}/return', [TaskController::class, 'returnTask']);
 });

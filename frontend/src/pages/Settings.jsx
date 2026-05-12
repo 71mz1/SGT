@@ -1,36 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 
 const Settings = () => {
-  const [user, setUser] = useState(null);
   const [appearance, setAppearance] = useState('system');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { user, authLoading, isAdmin } = useAuth();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setError(null);
-        const userResponse = await api.get('/me');
-        setUser(userResponse.data);
-        
-        // Load appearance preference from localStorage
-        const savedAppearance = localStorage.getItem('appearance') || 'system';
-        setAppearance(savedAppearance);
-        applyAppearance(savedAppearance);
-      } catch (error) {
-        setError('Failed to load settings');
-        if (error.response?.status === 401) {
-          navigate('/login');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [navigate]);
+    if (!authLoading && user) {
+      // Load appearance preference from localStorage
+      const savedAppearance = localStorage.getItem('appearance') || 'system';
+      setAppearance(savedAppearance);
+      applyAppearance(savedAppearance);
+      setLoading(false);
+    }
+  }, [authLoading, user]);
 
   const applyAppearance = (mode) => {
     const html = document.documentElement;
@@ -118,8 +106,8 @@ const Settings = () => {
                       <div className="col-12">
                         <label className="form-label text-muted small">Role</label>
                         <div className="form-control-plaintext">
-                          <span className={`badge ${user?.role === 'admin' ? 'bg-primary' : 'bg-secondary'}`}>
-                            {user?.role === 'admin' ? 'Administrator' : 'Member'}
+                          <span className={`badge ${isAdmin ? 'bg-primary' : 'bg-secondary'}`}>
+                            {isAdmin ? 'Administrator' : 'Member'}
                           </span>
                         </div>
                       </div>

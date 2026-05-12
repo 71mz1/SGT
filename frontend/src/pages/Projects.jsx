@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
@@ -12,6 +13,7 @@ const Projects = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     fetchProjects();
@@ -74,6 +76,18 @@ const Projects = () => {
       }
     }
   };
+
+  const EmptyState = ({ title, message, actionLabel, onAction }) => (
+    <div className="text-center py-5 text-muted">
+      <div className="mb-2 fs-4">{title}</div>
+      <p className="mb-3">{message}</p>
+      {actionLabel && onAction && (
+        <button className="btn btn-primary btn-sm" onClick={onAction}>
+          {actionLabel}
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <div>
@@ -169,11 +183,12 @@ const Projects = () => {
           {/* Projects List */}
           <div className="col-12 col-lg-8">
             {projects.length === 0 ? (
-              <div className="card border-0 shadow-sm rounded-3">
-                <div className="card-body text-center py-5">
-                  <p className="text-muted mb-0">No projects found</p>
-                </div>
-              </div>
+              <EmptyState
+                title="No projects yet."
+                message="Create a project and link it to a group."
+                actionLabel="Create Project"
+                onAction={() => document.getElementById('name').focus()}
+              />
             ) : (
               <div className="row g-3">
                 {projects.map((project) => (

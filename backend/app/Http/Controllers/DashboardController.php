@@ -21,6 +21,29 @@ class DashboardController extends Controller
         }
     }
 
+    private function normalizeStatusCounts(array $counts): array
+    {
+        $defaultStatuses = [
+            'en_attente' => 0,
+            'en_cours' => 0,
+            'validation' => 0,
+            'terminee' => 0,
+        ];
+
+        return array_merge($defaultStatuses, $counts);
+    }
+
+    private function normalizePriorityCounts(array $counts): array
+    {
+        $defaultPriorities = [
+            'low' => 0,
+            'medium' => 0,
+            'high' => 0,
+        ];
+
+        return array_merge($defaultPriorities, $counts);
+    }
+
     private function adminDashboard($user)
     {
         $adminGroupIds = $user->administeredGroups()->pluck('id');
@@ -40,18 +63,22 @@ class DashboardController extends Controller
             'total_tasks' => Task::whereHas('project.group', function ($query) use ($user) {
                 $query->where('admin_id', $user->id);
             })->count(),
-            'tasks_by_status' => Task::whereHas('project.group', function ($query) use ($user) {
-                $query->where('admin_id', $user->id);
-            })->selectRaw('status, COUNT(*) as count')
-                ->groupBy('status')
-                ->pluck('count', 'status')
-                ->toArray(),
-            'tasks_by_priority' => Task::whereHas('project.group', function ($query) use ($user) {
-                $query->where('admin_id', $user->id);
-            })->selectRaw('priority, COUNT(*) as count')
-                ->groupBy('priority')
-                ->pluck('count', 'priority')
-                ->toArray(),
+            'tasks_by_status' => $this->normalizeStatusCounts(
+                Task::whereHas('project.group', function ($query) use ($user) {
+                    $query->where('admin_id', $user->id);
+                })->selectRaw('status, COUNT(*) as count')
+                    ->groupBy('status')
+                    ->pluck('count', 'status')
+                    ->toArray()
+            ),
+            'tasks_by_priority' => $this->normalizePriorityCounts(
+                Task::whereHas('project.group', function ($query) use ($user) {
+                    $query->where('admin_id', $user->id);
+                })->selectRaw('priority, COUNT(*) as count')
+                    ->groupBy('priority')
+                    ->pluck('count', 'priority')
+                    ->toArray()
+            ),
             'recent_groups' => $user->administeredGroups()
                 ->with('users')
                 ->latest()
@@ -69,6 +96,24 @@ class DashboardController extends Controller
                 ->with('assignedUser', 'project')
                 ->latest()
                 ->get(),
+            'upcoming_deadlines' => Task::whereHas('project.group', function ($query) use ($user) {
+                $query->where('admin_id', $user->id);
+            })->whereNotNull('deadline')
+                ->where('deadline', '>=', now())
+                ->where('status', '!=', 'terminee')
+                ->with('assignedUser', 'project', 'project.group')
+                ->orderBy('deadline', 'asc')
+                ->take(5)
+                ->get(),
+            'overdue_tasks' => Task::whereHas('project.group', function ($query) use ($user) {
+                $query->where('admin_id', $user->id);
+            })->whereNotNull('deadline')
+                ->where('deadline', '<', now())
+                ->where('status', '!=', 'terminee')
+                ->with('assignedUser', 'project', 'project.group')
+                ->orderBy('deadline', 'asc')
+                ->take(5)
+                ->get(),
         ];
 
         return response()->json($stats);
@@ -79,16 +124,20 @@ class DashboardController extends Controller
         $stats = [
             'total_groups' => $user->groups()->count(),
             'total_tasks' => $user->assignedTasks()->count(),
-            'tasks_by_status' => $user->assignedTasks()
-                ->selectRaw('status, COUNT(*) as count')
-                ->groupBy('status')
-                ->pluck('count', 'status')
-                ->toArray(),
-            'tasks_by_priority' => $user->assignedTasks()
-                ->selectRaw('priority, COUNT(*) as count')
-                ->groupBy('priority')
-                ->pluck('count', 'priority')
-                ->toArray(),
+            'tasks_by_status' => $this->normalizeStatusCounts(
+                $user->assignedTasks()
+                    ->selectRaw('status, COUNT(*) as count')
+                    ->groupBy('status')
+                    ->pluck('count', 'status')
+                    ->toArray()
+            ),
+            'tasks_by_priority' => $this->normalizePriorityCounts(
+                $user->assignedTasks()
+                    ->selectRaw('priority, COUNT(*) as count')
+                    ->groupBy('priority')
+                    ->pluck('count', 'priority')
+                    ->toArray()
+            ),
             'my_tasks' => $user->assignedTasks()
                 ->with('project.group', 'project.group.admin')
                 ->latest()

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
@@ -18,28 +19,24 @@ const Tasks = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [user, setUser] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
 
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      fetchDataWithUser(parsedUser);
-    } else {
-      fetchDataWithUser(null);
-    }
-  }, []);
+  const { isAdmin, authLoading } = useAuth();
 
-  const fetchDataWithUser = async (currentUser) => {
+  useEffect(() => {
+    if (!authLoading) {
+      fetchData();
+    }
+  }, [authLoading]);
+
+  const fetchData = async () => {
     try {
       setLoading(true);
       const tasksRes = await api.get('/tasks');
       setTasks(tasksRes.data);
 
-      if (currentUser?.role === 'admin') {
+      if (isAdmin) {
         try {
           const projectsRes = await api.get('/projects');
           setProjects(projectsRes.data);
@@ -168,13 +165,24 @@ const Tasks = () => {
     return classes[priority] || 'bg-secondary';
   };
 
+  const EmptyState = ({ title, message, actionLabel, onAction }) => (
+    <div className="text-center py-5 text-muted">
+      <div className="mb-2 fs-4">{title}</div>
+      <p className="mb-3">{message}</p>
+      {actionLabel && onAction && (
+        <button className="btn btn-primary btn-sm" onClick={onAction}>
+          {actionLabel}
+        </button>
+      )}
+    </div>
+  );
+
   const formatDate = (dateString) => {
     if (!dateString) return 'No deadline';
     const date = new Date(dateString);
     return date.toISOString().split('T')[0];
   };
 
-  const isAdmin = user?.role === 'admin';
 
   // Filter and sort tasks
   const getFilteredAndSortedTasks = () => {
@@ -403,9 +411,19 @@ const Tasks = () => {
                 </div>
                 <div className="card-body p-0">
                   {filteredTasks.length === 0 ? (
-                    <div className="text-center py-5">
-                      <p className="text-muted mb-0">No tasks found</p>
-                    </div>
+                    tasks.length === 0 ? (
+                      <EmptyState
+                        title={isAdmin ? "No tasks yet." : "No tasks assigned yet."}
+                        message={isAdmin ? "Create your first task and assign it to a member." : "Tasks assigned to you will appear here."}
+                        actionLabel={isAdmin ? "Create Task" : undefined}
+                        onAction={isAdmin ? () => document.getElementById('title').focus() : undefined}
+                      />
+                    ) : (
+                      <EmptyState
+                        title="No results found."
+                        message="Try changing your filters or search keywords."
+                      />
+                    )
                   ) : (
                     <div className="list-group list-group-flush">
                       {filteredTasks.map((task) => (

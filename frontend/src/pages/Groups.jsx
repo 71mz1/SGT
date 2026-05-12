@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 
 const Groups = () => {
   const [groups, setGroups] = useState([]);
@@ -16,30 +17,22 @@ const Groups = () => {
     user_id: ''
   });
 
-  // Get current user from localStorage
-  const [currentUser, setCurrentUser] = useState(null);
-
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setCurrentUser(JSON.parse(userData));
-    }
-  }, []);
-
-  const isAdmin = currentUser?.role === 'admin';
+  const { isAdmin, user, authLoading } = useAuth();
 
   // Filter groups for member - only show groups where member belongs
   const memberGroups = React.useMemo(() => {
-    if (!currentUser) return [];
+    if (!user) return [];
     return groups.filter(group =>
-      group.users?.some(user => user.id === currentUser.id)
+      group.users?.some(groupUser => groupUser.id === user.id)
     );
-  }, [groups, currentUser]);
+  }, [groups, user]);
 
   useEffect(() => {
-    fetchGroups();
-    fetchUsers();
-  }, []);
+    if (!authLoading) {
+      fetchGroups();
+      fetchUsers();
+    }
+  }, [authLoading]);
 
   const fetchGroups = async () => {
     try {
@@ -124,6 +117,18 @@ const Groups = () => {
       }
     }
   };
+
+  const EmptyState = ({ title, message, actionLabel, onAction }) => (
+    <div className="text-center py-5 text-muted">
+      <div className="mb-2 fs-4">{title}</div>
+      <p className="mb-3">{message}</p>
+      {actionLabel && onAction && (
+        <button className="btn btn-primary btn-sm" onClick={onAction}>
+          {actionLabel}
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <div className="min-vh-100 bg-light">
@@ -259,11 +264,12 @@ const Groups = () => {
             {/* Groups List */}
             <div className="col-12 col-lg-8">
               {groups.length === 0 ? (
-                <div className="card border-0 shadow-sm rounded-3">
-                  <div className="card-body text-center py-5">
-                    <p className="text-muted mb-0">No groups found</p>
-                  </div>
-                </div>
+                <EmptyState
+                  title="No groups yet."
+                  message="Create a group to organize your members and projects."
+                  actionLabel="Create Group"
+                  onAction={() => document.getElementById('name').focus()}
+                />
               ) : (
                 <div className="row g-3">
                   {groups.map((group) => (
@@ -321,11 +327,10 @@ const Groups = () => {
           <div className="row g-4">
             <div className="col-12">
               {memberGroups.length === 0 ? (
-                <div className="card border-0 shadow-sm rounded-3">
-                  <div className="card-body text-center py-5">
-                    <p className="text-muted mb-0">You are not a member of any group yet.</p>
-                  </div>
-                </div>
+                <EmptyState
+                  title="You are not assigned to any group yet."
+                  message="Groups assigned to you will appear here."
+                />
               ) : (
                 <div className="row g-3">
                   {memberGroups.map((group) => (
