@@ -39,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Member routes
     Route::get('/members', [MemberController::class, 'index']);
     Route::post('/members', [MemberController::class, 'store']);
+    Route::put('/members/{user}', [MemberController::class, 'update']);
     Route::delete('/members/{user}', [MemberController::class, 'destroy']);
     
     // Group routes
