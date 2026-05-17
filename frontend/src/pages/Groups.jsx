@@ -12,10 +12,18 @@ const Groups = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [selectedGroup, setSelectedGroup] = useState('');
-  const [memberData, setMemberData] = useState({
-    user_id: ''
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [editingGroup, setEditingGroup] = useState(null);
+  const [viewingGroup, setViewingGroup] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    description: ''
   });
+  const [addMemberUserId, setAddMemberUserId] = useState('');
+  const [addMemberLoading, setAddMemberLoading] = useState(false);
+  const [modalMessage, setModalMessage] = useState({ type: '', text: '' });
 
   const { isAdmin, user, authLoading } = useAuth();
 
@@ -27,12 +35,36 @@ const Groups = () => {
     );
   }, [groups, user]);
 
+  // Stats for admin
+  const stats = React.useMemo(() => {
+    if (!isAdmin) return null;
+    const totalGroups = groups.length;
+    const totalMembers = new Set(groups.flatMap(g => g.users?.map(u => u.id) || [])).size;
+    const emptyGroups = groups.filter(g => !g.users || g.users.length === 0).length;
+    return { totalGroups, totalMembers, emptyGroups };
+  }, [groups, isAdmin]);
+
+  // Filtered groups for admin search
+  const filteredGroups = React.useMemo(() => {
+    if (!isAdmin) return groups;
+    return groups.filter(group =>
+      group.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [groups, searchTerm, isAdmin]);
+
+  const availableMembers = React.useMemo(() => {
+    if (!viewingGroup) return [];
+    return users.filter((user) => !viewingGroup.users?.some((member) => member.id === user.id));
+  }, [users, viewingGroup]);
+
   useEffect(() => {
     if (!authLoading) {
       fetchGroups();
-      fetchUsers();
+      if (isAdmin) {
+        fetchUsers();
+      }
     }
-  }, [authLoading]);
+  }, [authLoading, isAdmin]);
 
   const fetchGroups = async () => {
     try {
@@ -71,24 +103,43 @@ const Groups = () => {
     }
   };
 
-  const handleAddMember = async (e) => {
-    e.preventDefault();
-    if (!selectedGroup || !memberData.user_id) return;
+  const handleModalAddMember = async (groupId) => {
+    if (!addMemberUserId) return;
 
-    setLoading(true);
-    setError('');
-    setSuccess('');
+    setAddMemberLoading(true);
+    setModalMessage({ type: '', text: '' });
+
     try {
-      await api.post(`/groups/${selectedGroup}/members`, memberData);
-      setSuccess('Member added to group successfully!');
-      setMemberData({ user_id: '' });
-      setSelectedGroup('');
+      await api.post(`/groups/${groupId}/members`, { user_id: addMemberUserId });
+      const addedUser = users.find((user) => user.id === Number(addMemberUserId) || user.id === addMemberUserId);
+      setModalMessage({ type: 'success', text: 'Member added successfully.' });
+      setAddMemberUserId('');
       fetchGroups();
-      setTimeout(() => setSuccess(''), 4000);
+      setViewingGroup((prev) => prev ? {
+        ...prev,
+        users: prev.users ? [...prev.users, addedUser] : [addedUser],
+      } : prev);
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to add member');
+      setModalMessage({ type: 'error', text: error.response?.data?.message || 'Failed to add member' });
     } finally {
-      setLoading(false);
+      setAddMemberLoading(false);
+    }
+  };
+
+  const handleModalRemoveMember = async (groupId, userId, userName) => {
+    if (!window.confirm(`Remove ${userName} from this group?`)) return;
+
+    setModalMessage({ type: '', text: '' });
+    try {
+      await api.delete(`/groups/${groupId}/members/${userId}`);
+      setModalMessage({ type: 'success', text: `${userName} removed successfully.` });
+      fetchGroups();
+      setViewingGroup((prev) => prev ? {
+        ...prev,
+        users: prev.users?.filter((user) => user.id !== userId) || [],
+      } : prev);
+    } catch (error) {
+      setModalMessage({ type: 'error', text: error.response?.data?.message || 'Failed to remove member' });
     }
   };
 
@@ -118,6 +169,54 @@ const Groups = () => {
     }
   };
 
+  const openEditModal = (group) => {
+    setEditingGroup(group);
+    setEditFormData({
+      name: group.name,
+      description: group.description || ''
+    });
+    setShowEditModal(true);
+  };
+
+  const closeEditModal = () => {
+    setShowEditModal(false);
+    setEditingGroup(null);
+    setEditFormData({ name: '', description: '' });
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      await api.put(`/groups/${editingGroup.id}`, editFormData);
+      setSuccess('Group updated successfully!');
+      closeEditModal();
+      fetchGroups();
+      setTimeout(() => setSuccess(''), 4000);
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to update group');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openViewModal = (group) => {
+    setViewingGroup(group);
+    setAddMemberUserId('');
+    setModalMessage({ type: '', text: '' });
+    setShowViewModal(true);
+  };
+
+  const closeViewModal = () => {
+    setShowViewModal(false);
+    setViewingGroup(null);
+    setAddMemberUserId('');
+    setModalMessage({ type: '', text: '' });
+  };
+
   const EmptyState = ({ title, message, actionLabel, onAction }) => (
     <div className="text-center py-5 text-muted">
       <div className="mb-2 fs-4">{title}</div>
@@ -135,8 +234,17 @@ const Groups = () => {
       {/* Page Header */}
       <div className="bg-white border-bottom py-4">
         <div className="container">
-          <h1 className="h3 mb-1">Groups Management</h1>
-          <p className="text-muted mb-0">Create groups and manage members</p>
+          {isAdmin ? (
+            <>
+              <h1 className="h3 mb-1">Groups Management</h1>
+              <p className="text-muted mb-0">Create groups and manage members</p>
+            </>
+          ) : (
+            <>
+              <h1 className="h3 mb-1">My Groups</h1>
+              <p className="text-muted mb-0">Groups you are assigned to.</p>
+            </>
+          )}
         </div>
       </div>
 
@@ -159,9 +267,38 @@ const Groups = () => {
 
         {isAdmin ? (
           // ADMIN VIEW - Full Groups Management
-          <div className="row g-4">
-            {/* Create Group Form */}
-            <div className="col-12 col-lg-4">
+          <>
+            {/* Stats Cards */}
+            <div className="row g-3 mb-4">
+              <div className="col-12 col-sm-4">
+                <div className="card border-0 shadow-sm rounded-3 text-center">
+                  <div className="card-body py-3">
+                    <div className="h4 mb-1 text-primary">{stats.totalGroups}</div>
+                    <small className="text-muted">Total Groups</small>
+                  </div>
+                </div>
+              </div>
+              <div className="col-12 col-sm-4">
+                <div className="card border-0 shadow-sm rounded-3 text-center">
+                  <div className="card-body py-3">
+                    <div className="h4 mb-1 text-success">{stats.totalMembers}</div>
+                    <small className="text-muted">Total Members</small>
+                  </div>
+                </div>
+              </div>
+              <div className="col-12 col-sm-4">
+                <div className="card border-0 shadow-sm rounded-3 text-center">
+                  <div className="card-body py-3">
+                    <div className="h4 mb-1 text-warning">{stats.emptyGroups}</div>
+                    <small className="text-muted">Empty Groups</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="row g-4">
+              {/* Create Group Form */}
+              <div className="col-12 col-lg-4">
               <div className="card border-0 shadow-sm rounded-3 mb-4">
                 <div className="card-header bg-white border-bottom py-3">
                   <h5 className="card-title mb-0">Create Group</h5>
@@ -208,71 +345,38 @@ const Groups = () => {
                   </form>
                 </div>
               </div>
-
-              {/* Add Member Form */}
-              <div className="card border-0 shadow-sm rounded-3">
-                <div className="card-header bg-white border-bottom py-3">
-                  <h5 className="card-title mb-0">Add Member to Group</h5>
-                </div>
-                <div className="card-body">
-                  <form onSubmit={handleAddMember}>
-                    <div className="mb-3">
-                      <label className="form-label">Select Group</label>
-                      <select
-                        value={selectedGroup}
-                        onChange={(e) => setSelectedGroup(e.target.value)}
-                        className="form-select"
-                        required
-                        aria-label="Select group to add member to"
-                      >
-                        <option value="">Choose a group...</option>
-                        {groups.map((g) => (
-                          <option key={g.id} value={g.id}>{g.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="form-label">Select Member</label>
-                      <select
-                        value={memberData.user_id}
-                        onChange={(e) => setMemberData({ user_id: e.target.value })}
-                        className="form-select"
-                        required
-                        aria-label="Select member to add to group"
-                      >
-                        <option value="">Choose a member...</option>
-                        {users.map((user) => (
-                          <option key={user.id} value={user.id}>{user.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={!selectedGroup || !memberData.user_id || loading}
-                      className="btn btn-success w-100"
-                      aria-busy={loading}
-                    >
-                      {loading ? 'Adding...' : 'Add to Group'}
-                    </button>
-                  </form>
-                </div>
-              </div>
             </div>
 
             {/* Groups List */}
             <div className="col-12 col-lg-8">
-              {groups.length === 0 ? (
-                <EmptyState
-                  title="No groups yet."
-                  message="Create a group to organize your members and projects."
-                  actionLabel="Create Group"
-                  onAction={() => document.getElementById('name').focus()}
+              {/* Search Input */}
+              <div className="mb-3">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search by group name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
+              </div>
+
+              {filteredGroups.length === 0 ? (
+                searchTerm ? (
+                  <EmptyState
+                    title="No results found."
+                    message="Try a different search term."
+                  />
+                ) : (
+                  <EmptyState
+                    title="No groups yet."
+                    message="Create a group to organize your members and projects."
+                    actionLabel="Create Group"
+                    onAction={() => document.getElementById('name').focus()}
+                  />
+                )
               ) : (
                 <div className="row g-3">
-                  {groups.map((group) => (
+                  {filteredGroups.map((group) => (
                     <div key={group.id} className="col-12">
                       <div className="card border-0 shadow-sm rounded-3">
                         <div className="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
@@ -280,13 +384,29 @@ const Groups = () => {
                             <h5 className="card-title mb-0">{group.name}</h5>
                             <small className="text-muted">{group.description}</small>
                           </div>
-                          <button
-                            onClick={() => deleteGroup(group.id, group.name)}
-                            className="btn btn-outline-danger btn-sm"
-                            aria-label={`Delete group ${group.name}`}
-                          >
-                            Delete
-                          </button>
+                          <div className="d-flex gap-2">
+                            <button
+                              onClick={() => openViewModal(group)}
+                              className="btn btn-outline-primary btn-sm"
+                              aria-label={`View group ${group.name}`}
+                            >
+                              View
+                            </button>
+                            <button
+                              onClick={() => openEditModal(group)}
+                              className="btn btn-outline-secondary btn-sm"
+                              aria-label={`Edit group ${group.name}`}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => deleteGroup(group.id, group.name)}
+                              className="btn btn-outline-danger btn-sm"
+                              aria-label={`Delete group ${group.name}`}
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
                         <div className="card-body">
                           <div className="mb-3">
@@ -294,7 +414,7 @@ const Groups = () => {
                             <div className="fw-medium">{group.admin?.name || 'N/A'}</div>
                           </div>
 
-                          <div>
+                          <div className="mb-3">
                             <small className="text-muted">Members:</small>
                             {group.users?.length === 0 ? (
                               <p className="text-muted small mb-0">No members in this group</p>
@@ -314,6 +434,10 @@ const Groups = () => {
                               </div>
                             )}
                           </div>
+
+                          <div>
+                            <small className="text-muted">Projects: {group.projects?.length || 0}</small>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -322,6 +446,158 @@ const Groups = () => {
               )}
             </div>
           </div>
+
+          {/* Edit Modal */}
+          {showEditModal && (
+            <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={closeEditModal}>
+              <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">Edit Group</h5>
+                    <button type="button" className="btn-close" onClick={closeEditModal}></button>
+                  </div>
+                  <form onSubmit={handleEditSubmit}>
+                    <div className="modal-body">
+                      <div className="mb-3">
+                        <label htmlFor="edit-name" className="form-label">Group Name</label>
+                        <input
+                          type="text"
+                          id="edit-name"
+                          className="form-control"
+                          value={editFormData.name}
+                          onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
+                          required
+                        />
+                      </div>
+                      <div className="mb-3">
+                        <label htmlFor="edit-description" className="form-label">Description</label>
+                        <textarea
+                          id="edit-description"
+                          className="form-control"
+                          rows="3"
+                          value={editFormData.description}
+                          onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    <div className="modal-footer">
+                      <button type="button" className="btn btn-secondary" onClick={closeEditModal}>Cancel</button>
+                      <button type="submit" className="btn btn-primary" disabled={loading}>
+                        {loading ? 'Updating...' : 'Update Group'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* View Modal */}
+          {showViewModal && (
+            <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={closeViewModal}>
+              <div className="modal-dialog modal-lg modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">{viewingGroup.name}</h5>
+                    <button type="button" className="btn-close" onClick={closeViewModal}></button>
+                  </div>
+                  <div className="modal-body">
+                    <div className="mb-3">
+                      <strong>Description:</strong>
+                      <p className="mt-1">{viewingGroup.description || 'No description'}</p>
+                    </div>
+                    <div className="mb-3">
+                      <strong>Admin:</strong>
+                      <p className="mt-1">{viewingGroup.admin?.name || 'N/A'}</p>
+                    </div>
+                    <div className="mb-3">
+                      <strong>Members ({viewingGroup.users?.length || 0}):</strong>
+                      {viewingGroup.users?.length === 0 ? (
+                        <p className="mt-1 text-muted">No members</p>
+                      ) : (
+                        <div className="d-flex flex-wrap gap-2 mt-2">
+                          {viewingGroup.users.map((user) => (
+                            <span key={user.id} className="badge bg-light text-dark border d-flex align-items-center gap-2">
+                              {user.name}
+                              <button
+                                type="button"
+                                className="btn-close btn-close-sm"
+                                aria-label={`Remove ${user.name}`}
+                                onClick={() => handleModalRemoveMember(viewingGroup.id, user.id, user.name)}
+                                style={{ fontSize: '0.5rem' }}
+                              ></button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {modalMessage.type && (
+                      <div className={`alert alert-${modalMessage.type === 'success' ? 'success' : 'danger'} py-2`} role="alert">
+                        {modalMessage.text}
+                      </div>
+                    )}
+
+                    <div className="card card-body border-0 rounded-3 mb-3">
+                      <div className="mb-3">
+                        <strong>Add Member</strong>
+                        {availableMembers.length === 0 ? (
+                          <p className="mt-2 text-muted mb-0">No available members to add.</p>
+                        ) : (
+                          <div className="d-flex gap-2 flex-column flex-sm-row">
+                            <select
+                              className="form-select"
+                              value={addMemberUserId}
+                              onChange={(e) => setAddMemberUserId(e.target.value)}
+                              aria-label="Select member to add"
+                            >
+                              <option value="">Choose a member...</option>
+                              {availableMembers.map((user) => (
+                                <option key={user.id} value={user.id}>{user.name}</option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              className="btn btn-success"
+                              onClick={() => handleModalAddMember(viewingGroup.id)}
+                              disabled={!addMemberUserId || addMemberLoading}
+                            >
+                              {addMemberLoading ? 'Adding...' : 'Add Member'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mb-3">
+                      <strong>Projects ({viewingGroup.projects?.length || 0}):</strong>
+                      {viewingGroup.projects?.length === 0 ? (
+                        <p className="mt-1 text-muted">No projects</p>
+                      ) : (
+                        <div className="d-flex flex-wrap gap-2 mt-2">
+                          {viewingGroup.projects.map((project) => (
+                            <span key={project.id} className="badge bg-primary">
+                              {project.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {viewingGroup.created_at && (
+                      <div className="mb-3">
+                        <strong>Created:</strong>
+                        <p className="mt-1">{new Date(viewingGroup.created_at).toLocaleDateString()}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={closeViewModal}>Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          </>
         ) : (
           // MEMBER VIEW - Read-only My Groups
           <div className="row g-4">

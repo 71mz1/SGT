@@ -40,6 +40,7 @@ const Navbar = () => {
     : [
         { label: 'Dashboard', path: '/dashboard' },
         { label: 'My Tasks', path: '/tasks' },
+        { label: 'My Projects', path: '/projects' },
         { label: 'My Groups', path: '/groups' },
       ];
 

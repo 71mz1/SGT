@@ -47,6 +47,33 @@ const Tasks = () => {
     }
   }, [authLoading]);
 
+  useEffect(() => {
+    if (!showViewModal) return;
+
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        setShowViewModal(false);
+        setSelectedTask(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [showViewModal]);
+
+  useEffect(() => {
+    if (!showEditModal) return;
+
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        setShowEditModal(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [showEditModal]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -500,6 +527,24 @@ const Tasks = () => {
                         </select>
                       </div>
 
+                      {formData.project_id && (() => {
+                        const selectedProject = projects.find(
+                          p => p.id === parseInt(formData.project_id)
+                        );
+                        return selectedProject?.group ? (
+                          <div className="mb-3">
+                            <label className="form-label">Group</label>
+                            <div className="form-control bg-light text-muted" 
+                                 style={{ cursor: 'not-allowed' }}>
+                              {selectedProject.group.name}
+                            </div>
+                            <div className="form-text">
+                              Only members of this group can be assigned.
+                            </div>
+                          </div>
+                        ) : null;
+                      })()}
+
                       <div className="mb-3">
                         <label htmlFor="assigned_to" className="form-label">Assign To</label>
                         <select
@@ -703,7 +748,23 @@ const Tasks = () => {
                             ) : task.status === 'terminee' ? (
                               <span className="text-muted small">Completed</span>
                             ) : !isAdmin && task.status === 'validation' ? (
-                              <span className="text-muted small">Validation</span>
+                              <span className="badge bg-info text-dark py-2 px-3">Awaiting Validation</span>
+                            ) : !isAdmin && task.status === 'en_attente' ? (
+                              <button
+                                type="button"
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={() => updateTaskStatus(task.id, 'en_cours', task.title)}
+                              >
+                                Start Task
+                              </button>
+                            ) : !isAdmin && task.status === 'en_cours' ? (
+                              <button
+                                type="button"
+                                className="btn btn-outline-info btn-sm"
+                                onClick={() => updateTaskStatus(task.id, 'validation', task.title)}
+                              >
+                                Send to Validation
+                              </button>
                             ) : (
                               <select
                                 value={task.status}
@@ -711,19 +772,11 @@ const Tasks = () => {
                                 className="form-select form-select-sm w-auto"
                                 aria-label={`Change task status for ${task.title}`}
                               >
-                                {isAdmin ? (
-                                  <>
-                                    <option value="en_attente">En Attente</option>
-                                    <option value="en_cours">En Cours</option>
-                                    <option value="validation">Validation</option>
-                                  </>
-                                ) : (
-                                  getMemberStatusOptions(task).map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                      {option.label}
-                                    </option>
-                                  ))
-                                )}
+                                <>
+                                  <option value="en_attente">En Attente</option>
+                                  <option value="en_cours">En Cours</option>
+                                  <option value="validation">Validation</option>
+                                </>
                               </select>
                             )}
                           </div>
@@ -740,8 +793,17 @@ const Tasks = () => {
 
       {/* View Task Modal */}
       {showViewModal && selectedTask && (
-        <div className="modal show d-block" tabIndex="-1" role="dialog">
-          <div className="modal-dialog modal-lg" role="document">
+        <div
+          className="modal show d-block"
+          tabIndex="-1"
+          role="dialog"
+          onClick={() => { setShowViewModal(false); setSelectedTask(null); }}
+        >
+          <div
+            className="modal-dialog modal-lg"
+            role="document"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Task Details</h5>
@@ -805,8 +867,17 @@ const Tasks = () => {
 
       {/* Edit Task Modal */}
       {showEditModal && editingTask && (
-        <div className="modal show d-block" tabIndex="-1" role="dialog">
-          <div className="modal-dialog modal-lg" role="document">
+        <div
+          className="modal show d-block"
+          tabIndex="-1"
+          role="dialog"
+          onClick={() => setShowEditModal(false)}
+        >
+          <div
+            className="modal-dialog modal-lg"
+            role="document"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Edit Task</h5>
@@ -891,10 +962,10 @@ const Tasks = () => {
                         value={editFormData.assigned_to}
                         onChange={handleEditChange}
                         className="form-select"
-                        disabled={editMembersLoading}
+                        disabled={editMembersLoading || !editFormData.project_id}
                         required
                       >
-                        <option value="">{editMembersLoading ? 'Loading members...' : 'Select a member...'}</option>
+                        <option value="">{editMembersLoading ? 'Loading members...' : !editFormData.project_id ? 'Select a project first...' : 'Select a member...'}</option>
                         {editUsers.map((u) => (
                           <option key={u.id} value={u.id}>
                             {u.name}

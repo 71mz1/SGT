@@ -34,7 +34,7 @@ class User extends Authenticatable
     // Relationships
     public function groups()
     {
-        return $this->belongsToMany(Group::class);
+        return $this->belongsToMany(Group::class, 'group_user');
     }
 
     public function administeredGroups()

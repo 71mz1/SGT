@@ -11,12 +11,13 @@ class GroupController extends Controller
 {
     public function index(Request $request)
     {
+         /** @var \App\Models\User $user */
         $user = Auth::user();
-        
+
         if ($user->role === 'admin') {
-            $groups = Group::with('admin', 'users')->get();
+            $groups = Group::where('admin_id', $user->id)->with('admin', 'users', 'projects')->get();
         } else {
-            $groups = $user->groups()->with('admin', 'users')->get();
+            $groups = $user->groups()->with('admin', 'users', 'projects')->get();
         }
         
         return response()->json($groups);
@@ -46,6 +47,7 @@ class GroupController extends Controller
 
     public function show(Group $group)
     {
+         /** @var \App\Models\User $user */
         $user = Auth::user();
         
         // Check if user is admin or member of the group
@@ -98,5 +100,48 @@ class GroupController extends Controller
         $group->users()->detach($user->id);
 
         return response()->json(['message' => 'Member removed successfully']);
+    }
+
+    public function update(Request $request, Group $group)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+
+        $user = Auth::user();
+        
+        if ($user->role !== 'admin' || $group->admin_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $group->update([
+            'name' => $request->name,
+            'description' => $request->description,
+        ]);
+
+        return response()->json($group->load('admin', 'users', 'projects'));
+    }
+
+    public function destroy(Group $group)
+    {
+        $user = Auth::user();
+        
+        if ($user->role !== 'admin' || $group->admin_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Check if group has projects
+        if ($group->projects()->count() > 0) {
+            return response()->json(['message' => 'Cannot delete a group that has associated projects. Remove projects first.'], 422);
+        }
+
+        // Detach all members
+        $group->users()->detach();
+
+        // Delete the group
+        $group->delete();
+
+        return response()->json(['message' => 'Group deleted successfully']);
     }
 }

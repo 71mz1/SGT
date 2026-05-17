@@ -14,7 +14,9 @@ class ProjectController extends Controller
         $user = Auth::user();
 
         if ($user->role === 'admin') {
-            $projects = Project::with('group', 'tasks')->get();
+            $projects = Project::whereHas('group', function ($q) use ($user) {
+                $q->where('admin_id', $user->id);
+            })->with('group', 'tasks')->get();
         } else {
             // Members can only see projects from their groups
             $projects = Project::whereHas('group.users', function ($q) use ($user) {
@@ -107,6 +109,12 @@ class ProjectController extends Controller
 
         if ($project->group->admin_id !== $user->id) {
             return response()->json(['message' => 'You are not the admin of this project group'], 403);
+        }
+
+        if ($project->tasks()->count() > 0) {
+            return response()->json([
+                'message' => 'Cannot delete a project that has tasks. Remove tasks first.'
+            ], 422);
         }
 
         $project->delete();

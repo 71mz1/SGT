@@ -139,6 +139,7 @@ const Dashboard = () => {
   const overdueCount = stats?.overdue_tasks?.length || 0;
   const upcomingCount = stats?.upcoming_deadlines?.length || 0;
   const myTasksCount = stats?.total_tasks || 0;
+  const memberGroupsCount = stats?.total_groups || 0;
 
   let adminWelcomeMessage = '';
   if (validationCount === 0 && overdueCount === 0 && upcomingCount === 0) {
@@ -156,9 +157,14 @@ const Dashboard = () => {
     memberWelcomeMessage = 'You have no assigned tasks yet.';
   } else {
     const parts = [`${myTasksCount} assigned ${pluralize(myTasksCount, 'task')}`];
-    if (overdueCount > 0) parts.push(`${overdueCount} overdue ${pluralize(overdueCount, 'task')}`);
     if (upcomingCount > 0) parts.push(`${upcomingCount} upcoming ${pluralize(upcomingCount, 'deadline')}`);
-    memberWelcomeMessage = `You have ${parts.join(', ')}.`;
+    if (memberGroupsCount > 0) parts.push(`are in ${memberGroupsCount} ${pluralize(memberGroupsCount, 'group')}`);
+    if (parts.length > 1) {
+      const lastPart = parts.pop();
+      memberWelcomeMessage = `You have ${parts.join(', ')}${parts.length > 0 ? ', and ' : ''}${lastPart}.`;
+    } else {
+      memberWelcomeMessage = `You have ${parts[0]}.`;
+    }
   }
 
   if (loading) {
@@ -647,16 +653,21 @@ const Dashboard = () => {
 
             {/* Stats Cards */}
             <div className="row g-4 mb-4">
-              <div className="col-12 col-sm-6 col-lg-3">
-                <div className="card border-0 shadow-sm rounded-3 h-100">
+              <div className="col-12 col-sm-6 col-lg-4">
+                <button
+                  type="button"
+                  onClick={() => navigate('/tasks')}
+                  className="card border-0 shadow-sm rounded-3 h-100 w-100 bg-transparent text-start"
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className="card-body text-center">
                     <h3 className="h2 text-primary mb-1">{stats?.total_tasks || 0}</h3>
                     <p className="text-muted mb-0 small">My Tasks</p>
                   </div>
-                </div>
+                </button>
               </div>
 
-              <div className="col-12 col-sm-6 col-lg-3">
+              <div className="col-12 col-sm-6 col-lg-4">
                 <div className="card border-0 shadow-sm rounded-3 h-100">
                   <div className="card-body text-center">
                     <h3 className="h2 text-warning mb-1">{stats?.tasks_by_status?.en_attente || 0}</h3>
@@ -665,7 +676,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="col-12 col-sm-6 col-lg-3">
+              <div className="col-12 col-sm-6 col-lg-4">
                 <div className="card border-0 shadow-sm rounded-3 h-100">
                   <div className="card-body text-center">
                     <h3 className="h2 text-info mb-1">{stats?.tasks_by_status?.en_cours || 0}</h3>
@@ -674,7 +685,16 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="col-12 col-sm-6 col-lg-3">
+              <div className="col-12 col-sm-6 col-lg-4">
+                <div className="card border-0 shadow-sm rounded-3 h-100">
+                  <div className="card-body text-center">
+                    <h3 className="h2 text-info mb-1">{stats?.tasks_by_status?.validation || 0}</h3>
+                    <p className="text-muted mb-0 small">Validation</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-12 col-sm-6 col-lg-4">
                 <div className="card border-0 shadow-sm rounded-3 h-100">
                   <div className="card-body text-center">
                     <h3 className="h2 text-success mb-1">{stats?.tasks_by_status?.terminee || 0}</h3>
@@ -682,7 +702,150 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
+
+              <div className="col-12 col-sm-6 col-lg-4">
+                <button
+                  type="button"
+                  onClick={() => navigate('/groups')}
+                  className="card border-0 shadow-sm rounded-3 h-100 w-100 bg-transparent text-start"
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="card-body text-center">
+                    <h3 className="h2 text-secondary mb-1">{stats?.total_groups || 0}</h3>
+                    <p className="text-muted mb-0 small">My Groups</p>
+                  </div>
+                </button>
+              </div>
             </div>
+
+            {/* Upcoming Deadlines */}
+            {stats?.upcoming_deadlines && (
+              <div className="card border-0 shadow-sm rounded-3 mb-4">
+                <div className="card-header bg-white border-bottom py-3">
+                  <h5 className="card-title mb-0">Upcoming Deadlines</h5>
+                </div>
+                <div className="card-body p-0">
+                  {stats.upcoming_deadlines.length > 0 ? (
+                    <div className="list-group list-group-flush">
+                      {stats.upcoming_deadlines.map((task) => (
+                        <div key={task.id} className="list-group-item py-3">
+                          <div className="d-flex justify-content-between align-items-start">
+                            <div>
+                              <h6 className="mb-1 fw-semibold">{task.title}</h6>
+                              <p className="small text-muted mb-1">{task.project?.name || 'N/A'}</p>
+                              <div className="d-flex flex-wrap gap-2">
+                                <span className="badge bg-info text-dark">{formatDate(task.deadline)}</span>
+                                <span className={`badge ${getPriorityBadgeClass(task.priority)}`}>{getPriorityLabel(task.priority)}</span>
+                                <span className={`badge ${getStatusBadgeClass(task.status)}`}>{getStatusLabel(task.status)}</span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-outline-primary btn-sm"
+                              onClick={() => navigate('/tasks')}
+                            >
+                              View
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      title="No upcoming deadlines."
+                      message="Tasks with future deadlines will appear here."
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Overdue Tasks */}
+            {stats?.overdue_tasks && (
+              <div className="card border-0 shadow-sm rounded-3 mb-4">
+                <div className="card-header bg-white border-bottom py-3">
+                  <h5 className="card-title mb-0">Overdue Tasks</h5>
+                </div>
+                <div className="card-body p-0">
+                  {stats.overdue_tasks.length > 0 ? (
+                    <div className="list-group list-group-flush">
+                      {stats.overdue_tasks.map((task) => (
+                        <div key={task.id} className="list-group-item py-3">
+                          <div className="d-flex justify-content-between align-items-start">
+                            <div>
+                              <h6 className="mb-1 fw-semibold">{task.title}</h6>
+                              <p className="small text-muted mb-1">{task.project?.name || 'N/A'}</p>
+                              <div className="d-flex flex-wrap gap-2 align-items-center">
+                                <span className="badge bg-danger">{formatDate(task.deadline)}</span>
+                                <span className={`badge ${getPriorityBadgeClass(task.priority)}`}>{getPriorityLabel(task.priority)}</span>
+                                <span className={`badge ${getStatusBadgeClass(task.status)}`}>{getStatusLabel(task.status)}</span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-outline-primary btn-sm"
+                              onClick={() => navigate('/tasks')}
+                            >
+                              View
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      title="No overdue tasks."
+                      message="Great job! All your tasks are on track."
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Tasks by Priority */}
+            {stats?.tasks_by_priority && (
+              <div className="card border-0 shadow-sm rounded-3 mb-4">
+                <div className="card-header bg-white border-bottom py-3">
+                  <h5 className="card-title mb-0">Tasks by Priority</h5>
+                </div>
+                <div className="card-body">
+                  <div className="row g-3">
+                    {(() => {
+                      const totalTasks = stats?.total_tasks || 0;
+                      return Object.entries(getNormalizedPriorityCounts(stats?.tasks_by_priority)).map(([priority, count]) => (
+                        <div key={priority} className="col-12 col-sm-4">
+                          <div className="border rounded-3 p-3 h-100">
+                            <div className="d-flex justify-content-between align-items-start mb-2">
+                              <div>
+                                <h6 className="mb-1">{getPriorityLabel(priority)}</h6>
+                                <small className="text-muted">Priority level</small>
+                              </div>
+                              <span className={`badge ${getPriorityBadgeClass(priority)}`} aria-label={`${getPriorityLabel(priority)} tasks: ${count}`}>{count}</span>
+                            </div>
+                            <div className="progress" style={{ height: '8px' }}>
+                              <div
+                                className={`progress-bar ${getPriorityBadgeClass(priority).replace('bg-', 'bg-').replace('text-dark', '')}`}
+                                role="progressbar"
+                                style={{ width: `${totalTasks > 0 ? Math.round((count / totalTasks) * 100) : 0}%` }}
+                                aria-valuenow={totalTasks > 0 ? Math.round((count / totalTasks) * 100) : 0}
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                                aria-label={`${count} tasks at ${getPriorityLabel(priority)} priority`}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                  {stats?.total_tasks === 0 && (
+                    <div className="text-center py-3 text-muted">
+                      <small>No task priorities to display yet.</small>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Task Categories */}
             <div className="card border-0 shadow-sm rounded-3 mb-4">
@@ -722,7 +885,6 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-
           </>
         )}
       </main>
